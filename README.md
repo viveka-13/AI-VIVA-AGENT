@@ -20,8 +20,8 @@ An AI-powered academic platform that automates the oral examination (viva) proce
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/your-username/ai-viva-agent.git
-    cd ai-viva-agent
+    git clone https://github.com/your-username/AI-VIVA-AGENT.git
+    cd AI-VIVA-AGENT
     ```
 
 2.  **Install Python dependencies**
