@@ -1,0 +1,1443 @@
+[
+    {
+        "experiment": "1",
+        "question_number": 1,
+        "question": "What is a linked list?",
+        "answer": "A linear data structure where elements are stored in nodes with links to the next."
+    },
+    {
+        "experiment": "1",
+        "question_number": 2,
+        "question": "What is a node in a linked list",
+        "answer": "A node contains data and a pointer to the next node."
+    },
+    {
+        "experiment": "1",
+        "question_number": 3,
+        "question": "What is the difference between arrays and linked lists",
+        "answer": "Arrays use contiguous memory; linked lists use nodes with dynamic memory."
+    },
+    {
+        "experiment": "1",
+        "question_number": 4,
+        "question": "What is a singly linked list?",
+        "answer": "A list where each node points to its next node only."
+    },
+    {
+        "experiment": "1",
+        "question_number": 5,
+        "question": "What is stored in the 'next' field of a node?",
+        "answer": "It stores the address of the next node."
+    },
+    {
+        "experiment": "1",
+        "question_number": 6,
+        "question": "What does the last node of a singly linked list point to?",
+        "answer": "It points to NULL."
+    },
+    {
+        "experiment": "1",
+        "question_number": 7,
+        "question": "What is the head in a singly linked list?",
+        "answer": "It is the pointer to the first node of the list."
+    },
+    {
+        "experiment": "1",
+        "question_number": 8,
+        "question": "What does NULL indicate in a linked list?",
+        "answer": "It indicates the end of the list."
+    },
+    {
+        "experiment": "1",
+        "question_number": 9,
+        "question": "What is dynamic memory allocation?",
+        "answer": "Allocating memory during runtime using `malloc()` or similar functions."
+    },
+    {
+        "experiment": "1",
+        "question_number": 10,
+        "question": "Which header file is used for dynamic memory in C?",
+        "answer": "stdlib.h."
+    },
+    {
+        "experiment": "1",
+        "question_number": 11,
+        "question": "What is the structure of a node in C?",
+        "answer": "struct node { int data; struct node *next; };`"
+    },
+    {
+        "experiment": "1",
+        "question_number": 12,
+        "question": "Can we access nodes randomly in a linked list?",
+        "answer": "No, nodes are accessed sequentially."
+    },
+    {
+        "experiment": "1",
+        "question_number": 13,
+        "question": "How to initialize an empty list?",
+        "answer": "Set the head pointer to NULL."
+    },
+    {
+        "experiment": "1",
+        "question_number": 14,
+        "question": "What is the main advantage of linked lists?",
+        "answer": "Dynamic memory usage and easy insertion/deletion."
+    },
+    {
+        "experiment": "1",
+        "question_number": 15,
+        "question": "Can linked lists shrink or grow in size?",
+        "answer": "Yes, dynamically during runtime."
+    },
+    {
+        "experiment": "1",
+        "question_number": 16,
+        "question": "What is a pointer in C?",
+        "answer": "A variable that stores the address of another variable."
+    },
+    {
+        "experiment": "1",
+        "question_number": 17,
+        "question": "What is the size of a pointer variable?",
+        "answer": "Typically 4 bytes (in 32-bit systems)."
+    },
+    {
+        "experiment": "1",
+        "question_number": 18,
+        "question": "Which operator is used to access structure members through pointers?",
+        "answer": "'->' operator."
+    },
+    {
+        "experiment": "1",
+        "question_number": 19,
+        "question": "What does 'malloc()' return?",
+        "answer": "A pointer to the allocated memory."
+    },
+    {
+        "experiment": "1",
+        "question_number": 20,
+        "question": "How do we traverse a linked list?",
+        "answer": "How do we traverse a linked list?"
+    },
+    {
+        "experiment": "1",
+        "question_number": 21,
+        "question": "Which part of a node links it to the next node?",
+        "answer": "The next pointer."
+    },
+    {
+        "experiment": "1",
+        "question_number": 22,
+        "question": "Can a linked list be empty?",
+        "answer": "Yes, when the head is NULL."
+    },
+    {
+        "experiment": "1",
+        "question_number": 23,
+        "question": "How many fields are in a singly linked list node?",
+        "answer": "Two fields: data and next."
+    },
+    {
+        "experiment": "1",
+        "question_number": 24,
+        "question": "Is memory allocated statically in linked lists?",
+        "answer": "No, it is allocated dynamically."
+    },
+    {
+        "experiment": "1",
+        "question_number": 25,
+        "question": "Which keyword is used to define structures in C?",
+        "answer": "struct"
+    },
+    {
+        "experiment": "1",
+        "question_number": 26,
+        "question": "What does `struct node *start = NULL;` mean?",
+        "answer": "Declares and initializes an empty linked list."
+    },
+    {
+        "experiment": "1",
+        "question_number": 27,
+        "question": "What is the use of `free()` function?",
+        "answer": "To deallocate dynamically allocated memory."
+    },
+    {
+        "experiment": "1",
+        "question_number": 28,
+        "question": "How many pointers are needed for a singly linked list?",
+        "answer": "One pointer per node to the next node."
+    },
+    {
+        "experiment": "1",
+        "question_number": 29,
+        "question": "Can we implement linked lists using arrays?",
+        "answer": "No, arrays do not support dynamic linking like nodes."
+    },
+    {
+        "experiment": "1",
+        "question_number": 30,
+        "question": "What is a linear data structure?",
+        "answer": "A structure where elements are arranged sequentially."
+    },
+    {
+        "experiment": "2",
+        "question_number": 1,
+        "question": "What is a circular linked list?",
+        "answer": "A circular linked list is a linked list where the last node points back to the first node, forming a circle."
+    },
+    {
+        "experiment": "2",
+        "question_number": 2,
+        "question": "What is the key difference between a circular and a singly linked list?",
+        "answer": "In a singly linked list, the last node points to NULL, but in a circular linked list, it points to the first node."
+    },
+    {
+        "experiment": "2",
+        "question_number": 3,
+        "question": "What does each node in a circular linked list contain?",
+        "answer": "Each node contains data and a pointer to the next node in the list."
+    },
+    {
+        "experiment": "2",
+        "question_number": 4,
+        "question": "What does the \u2018last\u2019 pointer represent in a circular linked list?",
+        "answer": "The last pointer points to the last node in the circular list, whose next points to the first node."
+    },
+    {
+        "experiment": "2",
+        "question_number": 5,
+        "question": "Is the circular linked list linear or non-linear?",
+        "answer": "It is a linear data structure in logic but behaves like a circular one due to its looped connection."
+    },
+    {
+        "experiment": "2",
+        "question_number": 6,
+        "question": "How is memory allocated for a node in C?",
+        "answer": "Memory is allocated using malloc() function from stdlib.h."
+    },
+    {
+        "experiment": "2",
+        "question_number": 7,
+        "question": "What is the condition to check if a circular linked list is empty?",
+        "answer": "The list is empty if last == NULL."
+    },
+    {
+        "experiment": "2",
+        "question_number": 8,
+        "question": "How do you traverse a circular linked list?",
+        "answer": "Start from last->next and loop until you reach the starting node again."
+    },
+    {
+        "experiment": "2",
+        "question_number": 9,
+        "question": "What is the time complexity to display elements in a circular linked list?",
+        "answer": "It is O(n), where n is the number of nodes."
+    },
+    {
+        "experiment": "2",
+        "question_number": 10,
+        "question": "Which function is used to insert a node at the beginning?",
+        "answer": "The insertbeg() function."
+    },
+    {
+        "experiment": "2",
+        "question_number": 11,
+        "question": "Which function is used to insert a node at the end?",
+        "answer": "The insertend() function."
+    },
+    {
+        "experiment": "2",
+        "question_number": 12,
+        "question": "Which function is used to insert a node after a given node?",
+        "answer": "The insertmid() function."
+    },
+    {
+        "experiment": "2",
+        "question_number": 13,
+        "question": "Which function deletes the first node in the list?",
+        "answer": "The deletebeg() function."
+    },
+    {
+        "experiment": "2",
+        "question_number": 14,
+        "question": "Which function deletes the last node in the list?",
+        "answer": "The deleteend() function."
+    },
+    {
+        "experiment": "2",
+        "question_number": 15,
+        "question": "Which function deletes a specific node in the list?",
+        "answer": "The deletemid() function."
+    },
+    {
+        "experiment": "2",
+        "question_number": 16,
+        "question": "What is the output if the list is empty while displaying?",
+        "answer": "The program prints \u202ccll is empty\u202d."
+    },
+    {
+        "experiment": "2",
+        "question_number": 17,
+        "question": "What happens if you try to delete from an empty list?",
+        "answer": "It prints a message that deletion is not possible."
+    },
+    {
+        "experiment": "2",
+        "question_number": 18,
+        "question": "How do you check if a list has only one node?",
+        "answer": "If last->next == last, it means there's only one node."
+    },
+    {
+        "experiment": "2",
+        "question_number": 19,
+        "question": "Can we insert into an empty circular linked list?",
+        "answer": "Yes, during insertion the last pointer is set to the new node and points to itself."
+    },
+    {
+        "experiment": "2",
+        "question_number": 20,
+        "question": "What is the role of malloc()?",
+        "answer": "It dynamically allocates memory for the new node."
+    },
+    {
+        "experiment": "2",
+        "question_number": 21,
+        "question": "What does last->next represent?",
+        "answer": "It represents the first node in the circular linked list."
+    },
+    {
+        "experiment": "2",
+        "question_number": 22,
+        "question": "What happens when a node is inserted at the beginning in a non-empty list?",
+        "answer": "It becomes the new first node, and the last->next is updated accordingly."
+    },
+    {
+        "experiment": "2",
+        "question_number": 23,
+        "question": "Can circular linked lists be used for round-robin scheduling?",
+        "answer": "Yes, because of their circular nature, they are ideal for cyclic tasks."
+    },
+    {
+        "experiment": "2",
+        "question_number": 24,
+        "question": "What will happen if we don't update last->next properly?",
+        "answer": "The circular structure will break, causing wrong traversal or infinite loops."
+    },
+    {
+        "experiment": "2",
+        "question_number": 25,
+        "question": "Is NULL ever used in a circular linked list?",
+        "answer": "Yes, it\u2029s used when the list is empty or a node is being initialized."
+    },
+    {
+        "experiment": "2",
+        "question_number": 26,
+        "question": "Which standard library header is required for malloc?",
+        "answer": "#include <stdlib.h>"
+    },
+    {
+        "experiment": "2",
+        "question_number": 27,
+        "question": "What happens to the deleted node's memory?",
+        "answer": "It is freed using the free() function to prevent memory leaks."
+    },
+    {
+        "experiment": "2",
+        "question_number": 28,
+        "question": "Why do we use struct node last instead of head?",
+        "answer": "Because in a circular list, using last helps in easier end insertions and traversals."
+    },
+    {
+        "experiment": "2",
+        "question_number": 29,
+        "question": "Can a node be inserted without user input?",
+        "answer": "Yes, but in the given program user input is taken using scanf()."
+    },
+    {
+        "experiment": "2",
+        "question_number": 30,
+        "question": "What is the use of printf() in the CLL code?",
+        "answer": "It is used for displaying user prompts and output messages."
+    },
+    {
+        "experiment": "3",
+        "question_number": 1,
+        "question": "What happens if the element is not found in linear search? (Explain briefly)",
+        "answer": "The algorithm returns an indication such as -1 or false."
+    },
+    {
+        "experiment": "3",
+        "question_number": 2,
+        "question": "Why is binary search faster than linear search?",
+        "answer": "Because it eliminates half the search space each time."
+    },
+    {
+        "experiment": "3",
+        "question_number": 3,
+        "question": "What is the worst-case scenario for linear search? (Explain briefly)",
+        "answer": "The target is not present or is at the last position."
+    },
+    {
+        "experiment": "3",
+        "question_number": 4,
+        "question": "Does linear search require sorted data? (Explain briefly)",
+        "answer": "No, it works on both sorted and unsorted data."
+    },
+    {
+        "experiment": "3",
+        "question": "Does binary search work on linked lists? (Explain briefly)",
+        "answer": "Not efficiently, due to lack of random access.",
+        "question_number": 5
+    },
+    {
+        "experiment": "3",
+        "question_number": 6,
+        "question": "What is the best-case time complexity of binary search? (Explain briefly)",
+        "answer": "O(1), when the target is the middle element."
+    },
+    {
+        "experiment": "3",
+        "question_number": 7,
+        "question": "What is the time complexity of binary search?",
+        "answer": "O(log n), where n is the number of elements."
+    },
+    {
+        "experiment": "3",
+        "question_number": 8,
+        "question": "Does linear search require sorted data?",
+        "answer": "No, it works on both sorted and unsorted data."
+    },
+    {
+        "experiment": "3",
+        "question_number": 9,
+        "question": "Is linear search adaptive?",
+        "answer": "No, it does not change behavior based on input."
+    },
+    {
+        "experiment": "3",
+        "question_number": 10,
+        "question": "How is linear search implemented without loops?",
+        "answer": "By using recursion, though not common."
+    },
+    {
+        "experiment": "3",
+        "question_number": 11,
+        "question": "Is linear search adaptive? (Explain briefly)",
+        "answer": "No, it does not change behavior based on input."
+    },
+    {
+        "experiment": "3",
+        "question_number": 12,
+        "question": "How does binary search work on 2D arrays?",
+        "answer": "It can be done by treating the array as a flattened list or row-wise."
+    },
+    {
+        "experiment": "3",
+        "question_number": 13,
+        "question": "How does binary search reduce search space? (Explain briefly)",
+        "answer": "By comparing the target with the middle and ignoring one half."
+    },
+    {
+        "experiment": "3",
+        "question_number": 14,
+        "question": "How does binary search avoid overflow in middle index?",
+        "answer": "By using mid = low + (high - low) // 2 instead of (low + high) // 2."
+    },
+    {
+        "experiment": "3",
+        "question_number": 15,
+        "question": "How does binary search reduce search space?",
+        "answer": "By comparing the target with the middle and ignoring one half."
+    },
+    {
+        "experiment": "3",
+        "question_number": 16,
+        "question": "Can linear search be used on linked lists? (Explain briefly)",
+        "answer": "Yes, it can be used on linked lists."
+    },
+    {
+        "experiment": "3",
+        "question_number": 17,
+        "question": "Why is binary search not suitable for unsorted arrays?",
+        "answer": "Because it relies on order to decide which half to ignore."
+    },
+    {
+        "experiment": "3",
+        "question_number": 18,
+        "question": "What kind of inputs make linear search fast? (Explain briefly)",
+        "answer": "When the target is near the beginning."
+    },
+    {
+        "experiment": "3",
+        "question_number": 19,
+        "question": "What happens if the element is not found in binary search?",
+        "answer": "It returns -1 or a failure indication."
+    },
+    {
+        "experiment": "3",
+        "question_number": 20,
+        "question": "What is the best-case scenario for linear search?",
+        "answer": "The target element is found at the first position."
+    },
+    {
+        "experiment": "3",
+        "question_number": 21,
+        "question": "Does linear search work for multi-dimensional arrays? (Explain briefly)",
+        "answer": "Yes, but it must loop through each dimension."
+    },
+    {
+        "experiment": "3",
+        "question_number": 22,
+        "question": "What happens if there are duplicate values in binary search?",
+        "answer": "It may return any one of the duplicates."
+    },
+    {
+        "experiment": "3",
+        "question_number": 23,
+        "question": "Can binary search be used on infinite arrays?",
+        "answer": "Yes, with a modified approach to find the bounds first."
+    },
+    {
+        "experiment": "3",
+        "question_number": 24,
+        "question": "How is binary search different from jump search? (Explain briefly)",
+        "answer": "Binary halves the search space, jump uses fixed-size blocks."
+    },
+    {
+        "experiment": "3",
+        "question_number": 25,
+        "question": "What condition must be met to use binary search?",
+        "answer": "The data must be sorted."
+    },
+    {
+        "experiment": "3",
+        "question_number": 26,
+        "question": "How is binary search different from jump search?",
+        "answer": "Binary halves the search space, jump uses fixed-size blocks."
+    },
+    {
+        "experiment": "3",
+        "question_number": 27,
+        "question": "What is the worst-case scenario for linear search?",
+        "answer": "The target is not present or is at the last position."
+    },
+    {
+        "experiment": "3",
+        "question_number": 28,
+        "question": "Can binary search be applied to strings?",
+        "answer": "Yes, if the strings are sorted."
+    },
+    {
+        "experiment": "3",
+        "question_number": 29,
+        "question": "What is linear search? (Explain briefly)",
+        "answer": "It is a method of finding a target value by checking each element in a list one by one."
+    },
+    {
+        "experiment": "3",
+        "question_number": 30,
+        "question": "Can linear search be used in real-time systems?",
+        "answer": "Yes, if the dataset is small or search speed is not critical."
+    },
+        {
+        "experiment":"4",
+        "question_number": 1,
+        "question": "How to find all occurrences of a value using binary search?",
+        "answer": "Use modified versions to find first and last occurrences."
+    },
+    {
+        "experiment":"4",
+        "question_number": 2,
+        "question": "Is linear search suitable for sorted arrays? (Explain briefly)",
+        "answer": "Yes, but it doesn't benefit from sorting."
+    },
+    {
+        "experiment":"4",
+        "question_number": 3,
+        "question": "Is linear search stable?",
+        "answer": "Yes, it preserves the relative order of equal elements."
+    },
+    {
+        "experiment":"4",
+        "question_number": 4,
+        "question": "Why is binary search faster than linear search? (Explain briefly)",
+        "answer": "Because it eliminates half the search space each time."
+    },
+    {
+        "experiment":"4",
+        "question_number": 5,
+        "question": "Is linear search suitable for sorted arrays?",
+        "answer": "Yes, but it doesn't benefit from sorting."
+    },
+    {
+        "experiment":"4",
+        "question_number": 6,
+        "question": "What is the space complexity of binary search? (Explain briefly)",
+        "answer": "O(1) for iterative, O(log n) for recursive."
+    },
+    {
+        "experiment":"4",
+        "question_number": 7,
+        "question": "Is binary search recursive or iterative?",
+        "answer": "It can be implemented both ways."
+    },
+    {
+        "experiment":"4",
+        "question_number": 8,
+        "question": "Does linear search always give correct results?",
+        "answer": "Yes, if implemented correctly."
+    },
+    {
+        "experiment":"4",
+        "question_number": 9,
+        "question": "Compare linear search with hash-based searching.",
+        "answer": "Linear search is slower; hash-based search gives faster average access but requires more space."
+    },
+    {
+        "experiment":"4",
+        "question_number": 10,
+        "question": "What is the average number of comparisons in linear search?",
+        "answer": "n/2, where n is the size of the array."
+    },
+    {
+        "experiment":"4",
+        "question_number": 11,
+        "question": "How does linear search behave in worst-case for a list of size n?",
+        "answer": "It performs n comparisons."
+    },
+    {
+        "experiment":"4",
+        "question_number": 12,
+        "question": "What is linear search?",
+        "answer": "It is a method of finding a target value by checking each element in a list one by one."
+    },
+    {
+        "experiment":"4",
+        "question_number": 13,
+        "question": "What data structures suit linear search best?",
+        "answer": "Unordered lists or arrays."
+    },
+    {
+        "experiment":"4",
+        "question_number": 14,
+        "question": "What is the time complexity of binary search? (Explain briefly)",
+        "answer": "O(log n), where n is the number of elements."
+    },
+    {
+        "experiment":"4",
+        "question_number": 15,
+        "question": "What is the middle index formula in binary search?",
+        "answer": "mid = low + (high - low) // 2."
+    },
+    {
+        "experiment":"4",
+        "question_number": 16,
+        "question": "What happens if the element is not found in binary search? (Explain briefly)",
+        "answer": "It returns -1 or a failure indication."
+    },
+    {
+        "experiment":"4",
+        "question_number": 17,
+        "question": "What is the middle index formula in binary search? (Explain briefly)",
+        "answer": "mid = low + (high - low) // 2."
+    },
+    {
+        "experiment":"4",
+        "question_number": 18,
+        "question": "Why is linear search good for small datasets?",
+        "answer": "Because it's simple and fast enough for few elements."
+    },
+    {
+        "experiment":"4",
+        "question_number": 19,
+        "question": "What is the lower bound in binary search?",
+        "answer": "The first index where the target can be inserted without violating order."
+    },
+    {
+        "experiment":"4",
+        "question_number": 20,
+        "question": "What is the worst-case number of comparisons in binary search? (Explain briefly)",
+        "answer": "Log\u2082n comparisons."
+    },
+    {
+        "experiment":"4",
+        "question_number": 21,
+        "question": "Can binary search be used on databases?",
+        "answer": "Not directly, but indexes often use binary search internally."
+    },
+    {
+        "experiment":"4",
+        "question_number": 22,
+        "question": "What is exponential binary search?",
+        "answer": "It finds a range using exponential steps, then uses binary search."
+    },
+    {
+        "experiment":"4",
+        "question_number": 23,
+        "question": "What type of algorithm is linear search? (Explain briefly)",
+        "answer": "It is a sequential search algorithm."
+    },
+    {
+        "experiment":"4",
+        "question_number": 24,
+        "question": "How can the efficiency of linear search be slightly improved? (Explain briefly)",
+        "answer": "By using a sentinel value to reduce comparisons."
+    },
+    {
+        "experiment":"4",
+        "question_number": 25,
+        "question": "Can binary search be used on rotated sorted arrays?",
+        "answer": "Yes, using a modified version."
+    },
+    {
+        "experiment":"4",
+        "question_number": 26,
+        "question": "What happens if the element is not found in linear search?",
+        "answer": "The algorithm returns an indication such as -1 or false."
+    },
+    {
+        "experiment":"4",
+        "question_number": 27,
+        "question": "What is the upper bound in binary search?",
+        "answer": "The index just after the last occurrence of the target."
+    },
+    {
+        "experiment":"4",
+        "question_number": 28,
+        "question": "What is the time complexity of linear search? (Explain briefly)",
+        "answer": "O(n), where n is the number of elements in the array."
+    },
+    {
+        "experiment":"4",
+        "question_number": 29,
+        "question": "Can linear search be used on linked lists?",
+        "answer": "Yes, it can be used on linked lists."
+    },
+    {
+        "experiment":"4",
+        "question_number": 30,
+        "question": "How does linear search behave in worst-case for a list of size n? (Explain briefly)",
+        "answer": "It performs n comparisons."
+    },
+    {
+        "experiment":"5",
+        "question_number": 1,
+        "question": "What is Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 2,
+        "question": "Why is it called Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 3,
+        "question": "How does Bubble Sort work step by step?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 4,
+        "question": "What type of algorithm is Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 5,
+        "question": "Is Bubble Sort comparison-based?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 6,
+        "question": "Does Bubble Sort require extra space?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 7,
+        "question": "What is the best-case input for Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 8,
+        "question": "How many passes does Bubble Sort make for n elements?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 9,
+        "question": "Is Bubble Sort stable?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 10,
+        "question": "What happens if the array is already sorted in Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 11,
+        "question": "Can Bubble Sort detect sorted arrays early?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 12,
+        "question": "When should we use Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 13,
+        "question": "Why is Bubble Sort not suitable for large data?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 14,
+        "question": "What are the key operations in Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 15,
+        "question": "Does Bubble Sort work on negative numbers?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 16,
+        "question": "Is Bubble Sort an in-place algorithm?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 17,
+        "question": "What is a real-life example where Bubble Sort can be used?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 18,
+        "question": "What is the time complexity of Bubble Sort in worst case?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 19,
+        "question": "Explain why Bubble Sort takes O(n^2) time in worst case.",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 20,
+        "question": "Describe how Bubble Sort can be optimized.",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 21,
+        "question": "What is the average-case time complexity of Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 22,
+        "question": "Is Bubble Sort adaptive? Explain.",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 23,
+        "question": "How does Bubble Sort compare with Insertion Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 24,
+        "question": "Compare Bubble Sort with Selection Sort on performance.",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 25,
+        "question": "What kind of loop structure does Bubble Sort use?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 26,
+        "question": "Is Bubble Sort recursive or iterative?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 27,
+        "question": "How many swaps happen in best case of Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 28,
+        "question": "When does Bubble Sort perform the most swaps?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 29,
+        "question": "What is the auxiliary space of Bubble Sort?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"5",
+        "question_number": 30,
+        "question": "Can we stop Bubble Sort early?",
+        "answer": "Answer varies depending on concept but should be clear and concise."
+    },
+    {
+        "experiment":"6",
+        "question_number": 1,
+        "question": "What is a stack in data structures?",
+        "answer": "A stack is a linear data structure in which insertion and deletion operations are performed only at one end called the \u201ctop\u201d. It follows the Last In First Out (LIFO) principle, meaning the last inserted element is the first to be removed."
+    },
+    {
+        "experiment":"6",
+        "question_number": 2,
+        "question": "Explain the LIFO principle with respect to stacks.",
+        "answer": "LIFO (Last In First Out) means the last element added to the stack is the first one to be removed. This is similar to a stack of plates\u2014when you place a new plate on top, you remove it first before accessing the plate below."
+    },
+    {
+        "experiment":"6",
+        "question_number": 3,
+        "question": "What are the basic operations supported by a stack?",
+        "answer": "A stack supports three main operations: Push \u2013 inserts an element at the top Pop \u2013 removes the element from the top Display \u2013 shows all elements from top to bottom"
+    },
+    {
+        "experiment":"6",
+        "question_number": 4,
+        "question": "What does the push operation do in a stack?",
+        "answer": "The push operation inserts a new element at the top of the stack. If the stack is implemented using an array, the 'top' index is incremented, and the value is stored at the new top position."
+    },
+    {
+        "experiment":"6",
+        "question_number": 5,
+        "question": "What is the function of pop in stack?",
+        "answer": "The pop operation removes the top element from the stack. It decrements the 'top' pointer and retrieves the last inserted element."
+    },
+    {
+        "experiment":"6",
+        "question_number": 6,
+        "question": "Define the role of the 'top' variable in stack.",
+        "answer": "The 'top' is a pointer or index that indicates the current topmost element in the stack. It is updated with each push (incremented) and pop (decremented)."
+    },
+    {
+        "experiment":"6",
+        "question_number": 7,
+        "question": "What is stack overflow?",
+        "answer": "Stack overflow occurs when we try to push an element into a stack that is already full. In array implementation, this happens when top == SIZE - 1."
+    },
+    {
+        "experiment":"6",
+        "question_number": 8,
+        "question": "What is stack underflow?",
+        "answer": "Stack underflow occurs when we try to pop an element from an empty stack. This means top == -1, and there\u2019s nothing to remove."
+    },
+    {
+        "experiment":"6",
+        "question_number": 9,
+        "question": "Mention any one limitation of array-based stack implementation.",
+        "answer": "Array-based stacks are of fixed size, meaning they can only store a limited number of elements. They cannot grow dynamically, which can lead to overflow even if memory is available."
+    },
+    {
+        "experiment":"6",
+        "question_number": 10,
+        "question": "How is a stack different from a queue?",
+        "answer": "A stack uses LIFO where the last element is removed first, whereas a queue uses FIFO (First In First Out), where the first inserted element is removed first."
+    },
+    {
+        "experiment":"6",
+        "question_number": 11,
+        "question": "How do you declare a stack using an array in C?",
+        "answer": "You can declare a stack using an array as follows: #define max 10 int stack[max]; int top = -1; Here, max defines the maximum size of the stack, and top keeps track of the top element's index."
+    },
+    {
+        "experiment":"6",
+        "question_number": 12,
+        "question": "What is the initial value of 'top' in stack implementation?",
+        "answer": "The initial value of top is -1, indicating that the stack is empty. When elements are pushed, top is incremented."
+    },
+    {
+        "experiment":"6",
+        "question_number": 13,
+        "question": "Write the condition to check if the stack is full.",
+        "answer": "In array implementation, the condition is: if(top == max - 1) This checks whether the top has reached the maximum allowed index."
+    },
+    {
+        "experiment":"6",
+        "question_number": 14,
+        "question": "What condition is used to check if the stack is empty?",
+        "answer": "The condition is: if(top == -1) This means there are no elements in the stack to pop or display."
+    },
+    {
+        "experiment":"6",
+        "question_number": 15,
+        "question": "What does the push function do in the given C code?",
+        "answer": "The push() function: Checks if the stack is full. If not full, it reads an integer from the user. Increments top and assigns the value to stack[top]."
+    },
+    {
+        "experiment":"6",
+        "question_number": 16,
+        "question": "What happens when you call pop() on an empty stack?",
+        "answer": "If pop() is called on an empty stack (top == -1), the function prints an error message indicating stack underflow and does not perform deletion."
+    },
+    {
+        "experiment":"6",
+        "question_number": 17,
+        "question": "Describe how the display function works in the stack program.",
+        "answer": "The display function: Checks if the stack is empty (top == -1) If not empty, it loops from top to 0, printing each element, thus showing the stack from top to bottom."
+    },
+    {
+        "experiment":"6",
+        "question_number": 18,
+        "question": "How are multiple elements inserted into a stack using the given menu-driven code?",
+        "answer": "In the main function, the user is shown a menu with options. When option 1 (push) is selected, the push() function is called, and the user can insert values repeatedly."
+    },
+    {
+        "experiment":"6",
+        "question_number": 19,
+        "question": "What header files are included in the array-based stack implementation?",
+        "answer": "The code includes: #include<stdio.h> #include<stdlib.h> These are needed for input/output functions and memory allocation."
+    },
+    {
+        "experiment":"6",
+        "question_number": 20,
+        "question": "What will the stack look like after pushing 10, 20, and 30?",
+        "answer": "After pushing in order: stack[0] = 10 stack[1] = 20 stack[2] = 30 top = 2 The display will show: 30 20 10"
+    },
+    {
+        "experiment":"6",
+        "question_number": 21,
+        "question": "Give a real-life example of stack usage.",
+        "answer": "One real-life example is a stack of books. When you place books one on top of another, you remove the top book first. This behavior mimics the LIFO principle of stacks."
+    },
+    {
+        "experiment":"6",
+        "question_number": 22,
+        "question": "How are stacks used in undo operations in software?",
+        "answer": "Each user action is pushed onto a stack. When the user hits undo, the latest action is popped from the stack and reversed. This allows actions to be undone in reverse order of execution."
+    },
+    {
+        "experiment":"6",
+        "question_number": 23,
+        "question": "How is a stack used in backtracking algorithms?",
+        "answer": "Stacks store previous states or choices. When a dead-end is encountered in algorithms (like maze solving), the last state is popped and the program backtracks to it to try another path."
+    },
+    {
+        "experiment":"6",
+        "question_number": 24,
+        "question": "What role do stacks play in expression evaluation?",
+        "answer": "Stacks are used in evaluating postfix expressions. Operands are pushed into the stack. When an operator is encountered, operands are popped, the operation is applied, and the result is pushed back."
+    },
+    {
+        "experiment":"6",
+        "question_number": 25,
+        "question": "How does stack help in function call handling?",
+        "answer": "During function calls, each call\u2019s data (return address, variables) is pushed onto the call stack. When the function returns, this data is popped, allowing the program to resume from the correct point."
+    },
+    {
+        "experiment":"6",
+        "question_number": 26,
+        "question": "Describe how a stack is used in reversing a string.",
+        "answer": "Each character of the string is pushed onto a stack. Then, by popping each character, the reversed string is formed. This works because stack reverses the order of elements (LIFO)."
+    },
+    {
+        "experiment":"6",
+        "question_number": 27,
+        "question": "What is the advantage of using stack for bracket matching?",
+        "answer": "As each opening bracket is encountered, it is pushed onto the stack. For every closing bracket, the stack is checked and popped. This helps ensure brackets are correctly nested and matched."
+    },
+    {
+        "experiment":"6",
+        "question_number": 28,
+        "question": "How are stacks used in web browsers?",
+        "answer": "The browser stores history pages in a stack. Each new page is pushed, and clicking \u201cback\u201d pops the current page to return to the previous one."
+    },
+    {
+        "experiment":"6",
+        "question_number": 29,
+        "question": "Give an example where stacks are used in memory management.",
+        "answer": "In recursive functions, stack frames are pushed to maintain local variables and return addresses. On returning from a function, the frame is popped. This stack-based management handles nested calls."
+    },
+    {
+        "experiment":"6",
+        "question_number": 30,
+        "question": "Why is stack preferred in postfix expression conversion?",
+        "answer": "Stacks make it easier to track operators and operands while scanning infix expressions. Operators are pushed and popped based on precedence, allowing conversion to postfix notation correctly. Moderate level questions:"
+    },
+    {
+        "experiment":"7",
+        "question_number": 1,
+        "question": "What is a queue in data structures?",
+        "answer": "A queue is a linear data structure that stores elements sequentially using the FIFO (First-In-First-Out) principle. The first element inserted is the first to be removed."
+    },
+    {
+        "experiment":"7",
+        "question_number": 2,
+        "question": "How does FIFO work in a queue?",
+        "answer": "FIFO means First-In-First-Out. It ensures that the first element added is the first one removed, just like people standing in a queue."
+    },
+    {
+        "experiment":"7",
+        "question_number": 3,
+        "question": "Define enqueue and dequeue operations.",
+        "answer": "Enqueue is inserting an element at the rear of the queue. Dequeue is removing an element from the front of the queue."
+    },
+    {
+        "experiment":"7",
+        "question_number": 4,
+        "question": "What are the two types of queues?",
+        "answer": "Linear queue and circular queue. Other variations include priority queue and double-ended queue (deque)."
+    },
+    {
+        "experiment":"7",
+        "question_number": 5,
+        "question": "What is the difference between a queue and a stack?",
+        "answer": "Queue uses FIFO principle; stack uses LIFO (Last-In-First-Out). In queue, insertion is at rear and deletion at front. In stack, both occur at the top."
+    },
+    {
+        "experiment":"7",
+        "question_number": 6,
+        "question": "What is queue underflow?",
+        "answer": "It occurs when dequeue operation is performed on an empty queue."
+    },
+    {
+        "experiment":"7",
+        "question_number": 7,
+        "question": "What is queue overflow?",
+        "answer": "It occurs when enqueue operation is performed on a full queue (especially in array implementation)."
+    },
+    {
+        "experiment":"7",
+        "question_number": 8,
+        "question": "When is a queue considered empty?",
+        "answer": "When front == -1 or front > rear."
+    },
+    {
+        "experiment":"7",
+        "question_number": 9,
+        "question": "What are the front and rear pointers in a queue?",
+        "answer": "Front points to the first element (for deletion), and rear points to the last inserted element."
+    },
+    {
+        "experiment":"7",
+        "question_number": 10,
+        "question": "Why is the queue called a linear data structure?",
+        "answer": "Because its elements are arranged in a straight sequence and accessed in order."
+    },
+    {
+        "experiment":"7",
+        "question_number": 11,
+        "question": "What is the initial value of front and rear in an empty queue?",
+        "answer": "Both are usually initialized to -1."
+    },
+    {
+        "experiment":"7",
+        "question_number": 12,
+        "question": "What condition indicates that a queue is full?",
+        "answer": "In array implementation, if rear == size - 1."
+    },
+    {
+        "experiment":"7",
+        "question_number": 13,
+        "question": "How can you check whether a queue is empty?",
+        "answer": "If front == -1 or front > rear."
+    },
+    {
+        "experiment":"7",
+        "question_number": 14,
+        "question": "What happens if we try to delete an element from an empty queue?",
+        "answer": "Queue underflow occurs, and deletion is not possible."
+    },
+    {
+        "experiment":"7",
+        "question_number": 15,
+        "question": "How can queues be implemented in C?",
+        "answer": "Using arrays or linked lists."
+    },
+    {
+        "experiment":"7",
+        "question_number": 16,
+        "question": "Compare queues using arrays and linked lists.",
+        "answer": "Arrays have fixed size; linked lists are dynamic. Linked lists don\u2019t face overflow unless memory is full."
+    },
+    {
+        "experiment":"7",
+        "question_number": 17,
+        "question": "What is the maximum size of a queue in array implementation?",
+        "answer": "It depends on the size of the array declared at compile time."
+    },
+    {
+        "experiment":"7",
+        "question_number": 18,
+        "question": "What are the limitations of array-based queues?",
+        "answer": "Fixed size, unused space after deletions unless using circular queue."
+    },
+    {
+        "experiment":"7",
+        "question": "How is memory utilized differently in linked list implementation?",
+        "answer": "It uses dynamic memory allocation. New memory is allocated only when required.",
+        "question_number": 19
+    },
+    {
+        "experiment":"7",
+        "question_number": 20,
+        "question": "Why might we prefer dynamic memory allocation for queues?",
+        "answer": "To avoid memory waste and allow flexible queue size."
+    },
+    {
+        "experiment":"7",
+        "question_number": 21,
+        "question": "What is a circular queue and how is it different from a normal queue?",
+        "answer": "It connects the rear back to the front to make full use of memory. In normal queues, space before front is wasted."
+    },
+    {
+        "experiment":"7",
+        "question_number": 22,
+        "question": "How does a circular queue avoid overflow in array-based implementation?",
+        "answer": "It reuses the space freed by dequeued elements."
+    },
+    {
+        "experiment":"7",
+        "question_number": 23,
+        "question": "What is the formula for checking full condition in a circular queue?",
+        "answer": "(rear + 1) % size == front"
+    },
+    {
+        "experiment":"7",
+        "question_number": 24,
+        "question": "Explain how enqueue and dequeue operations are modified in a circular queue.",
+        "answer": "Both use modulo operations to wrap around the array: rear = (rear + 1) % size, front = (front + 1) % size."
+    },
+    {
+        "experiment":"7",
+        "question_number": 25,
+        "question": "How do you differentiate between a queue and a priority queue?",
+        "answer": "In priority queue, elements are dequeued based on priority, not arrival time."
+    },
+    {
+        "experiment":"7",
+        "question_number": 26,
+        "question": "How are multiple queues managed in a multi-level system?",
+        "answer": "By assigning different queues for different priority levels or task types."
+    },
+    {
+        "experiment":"7",
+        "question_number": 27,
+        "question": "What is a double-ended queue (deque)?",
+        "answer": "A queue where insertions and deletions can happen from both ends."
+    },
+    {
+        "experiment":"7",
+        "question_number": 28,
+        "question": "What is the difference between input-restricted and output-restricted deque?",
+        "answer": "Input-restricted allows deletion from both ends but insertion only at one end. Output-restricted allows insertion at both ends but deletion only at one end."
+    },
+    {
+        "experiment":"7",
+        "question_number": 29,
+        "question": "What is a bounded queue?",
+        "answer": "A queue with a fixed size limit."
+    },
+    {
+        "experiment":"7",
+        "question_number": 30,
+        "question": "What is a static vs dynamic queue?",
+        "answer": "Static uses fixed size (arrays), dynamic uses variable size (linked list)."
+    },
+    {
+        "experiment":"8",
+        "question_number": 1,
+        "question": "What is a tree in data structures?",
+        "answer": "A non-linear data structure used to represent hierarchical data."
+    },
+    {
+        "experiment":"8",
+        "question_number": 2,
+        "question": "What is the root of a tree?",
+        "answer": "The topmost node of a tree."
+    },
+    {
+        "experiment":"8",
+        "question_number": 3,
+        "question": "What is a leaf node?",
+        "answer": "A node that has no children."
+    },
+    {
+        "experiment":"8",
+        "question_number": 4,
+        "question": "What is a parent node?",
+        "answer": "A node that has one or more child nodes."
+    },
+    {
+        "experiment":"8",
+        "question_number": 5,
+        "question": "What is a child node?",
+        "answer": "A node that descends from another node."
+    },
+    {
+        "experiment":"8",
+        "question_number": 6,
+        "question": "What is a binary tree?",
+        "answer": "A tree where each node has at most two children."
+    },
+    {
+        "experiment":"8",
+        "question_number": 7,
+        "question": "What is a Binary Search Tree (BST)?",
+        "answer": "A binary tree where left < root < right."
+    },
+    {
+        "experiment":"8",
+        "question_number": 8,
+        "question": "What is the left child and right child in a binary tree?",
+        "answer": "The first and second child nodes of a parent,"
+    },
+    {
+        "experiment":"8",
+        "question_number": 9,
+        "question": "What is the height of a tree?",
+        "answer": "The number of edges on the longest path from root to a leaf."
+    },
+    {
+        "experiment":"8",
+        "question_number": 10,
+        "question": "What is the depth of a node?",
+        "answer": "Number of edges from root to that node."
+    },
+    {
+        "experiment":"8",
+        "question_number": 11,
+        "question": "What is a balanced tree?",
+        "answer": "A tree where left and right subtrees of every node differ in height by no more than 1."
+    },
+    {
+        "experiment":"8",
+        "question_number": 12,
+        "question": "What is an unbalanced tree?",
+        "answer": "A tree where one subtree is significantly taller than the other."
+    },
+    {
+        "experiment":"8",
+        "question_number": 13,
+        "question": "What is inorder traversal?",
+        "answer": "Left -> Root -> Right"
+    },
+    {
+        "experiment":"8",
+        "question_number": 14,
+        "question": "What is preorder traversal?",
+        "answer": "Root -> Left -> Right"
+    },
+    {
+        "experiment":"8",
+        "question_number": 15,
+        "question": "What is postorder traversal?",
+        "answer": "Left -> Right -> Root"
+    },
+    {
+        "experiment":"8",
+        "question_number": 16,
+        "question": "What is level-order traversal?",
+        "answer": "Nodes are visited level by level from top to bottom."
+    },
+    {
+        "experiment":"8",
+        "question_number": 17,
+        "question": "What is the purpose of tree traversal?",
+        "answer": "To visit and process all nodes in a tree."
+    },
+    {
+        "experiment":"8",
+        "question_number": 18,
+        "question": "Which traversal gives sorted order in BST?",
+        "answer": "Inorder traversal."
+    },
+    {
+        "experiment":"8",
+        "question": "What is the purpose of BST?",
+        "answer": "Efficient searching, insertion, and deletion.",
+        "question_number": 19
+    },
+    {
+        "experiment":"8",
+        "question_number": 20,
+        "question": "What is the time complexity of BST operations in best case?",
+        "answer": "O(log n)"
+    },
+    {
+        "experiment":"8",
+        "question_number": 21,
+        "question": "What is the time complexity of BST in worst case?",
+        "answer": "O(n)"
+    },
+    {
+        "experiment":"8",
+        "question_number": 22,
+        "question": "Can a binary tree be empty?",
+        "answer": "Yes."
+    },
+    {
+        "experiment":"8",
+        "question_number": 23,
+        "question": "What is the maximum number of nodes at level 'l'?",
+        "answer": "2^l (where l starts from 0)."
+    },
+    {
+        "experiment":"8",
+        "question_number": 24,
+        "question": "Which data structure is used in level-order traversal?",
+        "answer": "Queue."
+    },
+    {
+        "experiment":"8",
+        "question_number": 25,
+        "question": "What is the height of a leaf node?",
+        "answer": "0"
+    },
+    {
+        "experiment":"8",
+        "question_number": 26,
+        "question": "How many children can a node have in a binary tree?",
+        "answer": "At most two."
+    },
+    {
+        "experiment":"8",
+        "question_number": 27,
+        "question": "How many children can a node have in a general tree?",
+        "answer": "Any number."
+    },
+    {
+        "experiment":"8",
+        "question_number": 28,
+        "question": "What is a full binary tree?",
+        "answer": "Every node has 0 or 2 children."
+    },
+    {
+        "experiment":"8",
+        "question_number": 29,
+        "question": "What is a complete binary tree?",
+        "answer": "All levels are completely filled except possibly the last."
+    },
+    {
+        "experiment":"8",
+        "question_number": 30,
+        "question": "What is a perfect binary tree?",
+        "answer": "All internal nodes have 2 children and all leaves are at the same level."
+    }
+]
+    

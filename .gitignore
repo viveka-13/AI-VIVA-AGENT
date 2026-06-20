@@ -1,0 +1,28 @@
+# Environment Variables
+.env
+.venv/
+venv/
+env/
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# App-generated Student Output Data
+output.txt
+output.json
+response.json
+combined_output.json
+validation.json
+validation_data/
+
+# Faculty dynamically uploaded and generated data
+faculty_data/faculty_registry.json
+faculty_data/subjects.json
+faculty_data/uploads/
+faculty_data/subject_questions/

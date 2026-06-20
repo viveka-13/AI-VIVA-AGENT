@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Login – Viva Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #0a0a0a;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #00f2ff;
+            font-size: 13px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            opacity: 0.7;
+        }
+
+        .container {
+            position: relative;
+            width: 90%;
+            max-width: 480px;
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            padding: 36px 32px;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                transparent 315deg,
+                #00f2ff 315deg,
+                #00f2ff 360deg,
+                transparent 360deg
+            );
+            animation: rotate 6s linear infinite;
+            opacity: 0.7;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border-radius: 10px;
+        }
+
+        .inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00f2ff;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 28px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 9px;
+            color: #ffffff;
+            font-weight: 300;
+            font-size: 13px;
+            padding-left: 15px;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .form-group:hover label {
+            color: #00f2ff;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 18px;
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid #fff;
+            border-radius: 25px;
+            color: #fff;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            transition: all 0.4s ease;
+            outline: none;
+        }
+
+        textarea {
+            border-radius: 16px;
+            resize: none;
+            min-height: 80px;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #00f2ff;
+            background: rgba(40, 40, 40, 0.7);
+            box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.2);
+        }
+
+        .form-group:hover input,
+        .form-group:hover textarea {
+            border-color: #444;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #0077ff, #00f2ff);
+            color: #000;
+            border: none;
+            border-radius: 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            margin-top: 8px;
+        }
+
+        button[type="submit"]::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(to right, #00f2ff, #0077ff);
+            transition: all 0.4s ease;
+            z-index: -1;
+        }
+
+        button[type="submit"]:hover { transform: translateY(-2px); }
+        button[type="submit"]:hover::before { left: 0; }
+
+        .alert {
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .alert-error {
+            background: rgba(255, 60, 60, 0.15);
+            border: 1px solid rgba(255, 60, 60, 0.4);
+            color: #ff6b6b;
+        }
+
+        .alert-success {
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: #00f2ff;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 22px 0 18px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #2d3748;
+        }
+
+        .divider span {
+            color: #444;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #555;
+            font-size: 12px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover { color: #00f2ff; }
+
+        .badge {
+            display: inline-block;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: #00f2ff;
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-left: 8px;
+            font-family: 'Orbitron', sans-serif;
+            vertical-align: middle;
+        }
+
+        @keyframes rotate {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <p class="page-title">⚡ Viva Agent — Faculty Portal</p>
+
+    <div class="container">
+        <div class="inner">
+            <h2>Faculty Login <span class="badge">STAFF</span></h2>
+            <p class="subtitle">New here? Entering your details will auto-register your account.</p>
+
+            {% if error %}
+            <div class="alert alert-error">⚠ {{ error }}</div>
+            {% endif %}
+            {% if success %}
+            <div class="alert alert-success">✓ {{ success }}</div>
+            {% endif %}
+
+            <form method="POST" action="/faculty/login">
+                <div class="form-group">
+                    <label for="faculty_name">Faculty Name</label>
+                    <input type="text" id="faculty_name" name="faculty_name"
+                           placeholder="Enter your full name" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="faculty_password">Password</label>
+                    <input type="password" id="faculty_password" name="faculty_password"
+                           placeholder="Enter your password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="faculty_profile">Profile / Department <span style="color:#555;font-size:11px;">(optional)</span></label>
+                    <textarea id="faculty_profile" name="faculty_profile"
+                              placeholder="e.g. Department of Computer Science, 10 years experience..."></textarea>
+                </div>
+
+                <button type="submit">Login / Register →</button>
+            </form>
+
+            <div class="divider"><span>OR</span></div>
+
+            <a class="back-link" href="/">← Back to Student Portal</a>
+        </div>
+    </div>
+
+    <script>
+        // Animate inputs on focus for extra polish
+        document.querySelectorAll('input, textarea').forEach(el => {
+            el.addEventListener('focus', () => el.closest('.form-group').querySelector('label').style.color = '#00f2ff');
+            el.addEventListener('blur',  () => el.closest('.form-group').querySelector('label').style.color = '');
+        });
+    </script>
+</body>
+</html>

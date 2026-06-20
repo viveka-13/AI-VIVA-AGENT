@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Questions</title>
+    <style>
+        /* ===== Dark Modern Quiz Form ===== */
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        .quiz-container {
+    position: relative;
+    background: linear-gradient(145deg, #121212, #1a1a1a);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    padding: 40px;
+    width: 90%;
+    max-width: 700px;
+    margin: 20px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.quiz-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        transparent 315deg, 
+        #00f2ff 315deg, 
+        #00f2ff 360deg, 
+        transparent 360deg
+    );
+    animation: rotate 6s linear infinite;
+    transition: opacity 0.3s ease;
+}
+
+.quiz-container::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: linear-gradient(145deg, #121212, #1a1a1a);
+    border-radius: 14px;
+    transition: all 0.3s ease;
+}
+
+        h2 {
+            text-align: center;
+            color: #00f2ff;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .question-block {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #2d3748;
+            position: relative;
+            z-index: 1;
+        }
+
+        .question-block:last-child {
+            border-bottom: none;
+        }
+
+        .question-block p {
+            font-weight: 500;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #e2e8f0;
+        }
+
+        textarea {
+            width: 93.5%;
+            padding: 15px 20px;
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid #acfbff;
+            border-radius: 25px;
+            font-family: inherit;
+            font-size: 16px;
+            resize: none;
+            min-height: 100px;
+            transition: all 0.3s ease;
+            color: #f7fafc;
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: #00f2ff;
+        }
+
+        textarea:focus {
+            border-color: #00f2ff;
+            background: rgba(40, 40, 40, 0.7);
+            box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.2);
+        }
+
+        textarea:hover {
+            border-color: #00f2ff;
+        }
+      /* Loading Overlay */
+        /* Keep all your styles as-is except fix loader reference */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(18, 18, 18, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            margin: auto;
+            position: relative;
+        }
+
+        .loader:before {
+            content: '';
+            width: 48px;
+            height: 5px;
+            background: #00f2ff30;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            border-radius: 50%;
+            animation: shadow324 0.5s linear infinite;
+        }
+
+        .loader:after {
+            content: '';
+            width: 100%;
+            height: 100%;
+            background: #00f2ff;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 4px;
+            animation: jump7456 0.5s linear infinite;
+        }
+
+        .loading-text {
+            color: #00f2ff;
+            font-size: 18px;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+
+        @keyframes jump7456 {
+            15% { border-bottom-right-radius: 3px; }
+            25% { transform: translateY(9px) rotate(22.5deg); }
+            50% { transform: translateY(18px) scale(1, .9) rotate(45deg); border-bottom-right-radius: 40px; }
+            75% { transform: translateY(9px) rotate(67.5deg); }
+            100% { transform: translateY(0) rotate(90deg); }
+        }
+
+        @keyframes shadow324 {
+            0%, 100% { transform: scale(1, 1); }
+            50% { transform: scale(1.2, 1); }
+        }
+
+/* Animations */
+@keyframes jump7456 {
+    15% {
+        border-bottom-right-radius: 3px;
+    }
+
+    25% {
+        transform: translateY(9px) rotate(22.5deg);
+    }
+
+    50% {
+        transform: translateY(18px) scale(1, .9) rotate(45deg);
+        border-bottom-right-radius: 40px;
+    }
+
+    75% {
+        transform: translateY(9px) rotate(67.5deg);
+    }
+
+    100% {
+        transform: translateY(0) rotate(90deg);
+    }
+}
+
+@keyframes shadow324 {
+    0%, 100% {
+        transform: scale(1, 1);
+    }
+
+    50% {
+        transform: scale(1.2, 1);
+    }
+}
+
+
+        button[type="submit"] {
+            background: linear-gradient(to right, #0077ff, #00f2ff);
+            color: #000;
+            border: none;
+            padding: 14px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            display: block;
+            margin: 30px auto 0;
+            width: 200px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        button[type="submit"]::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #00f2ff, #0077ff);
+            transition: all 0.4s ease;
+            z-index: -1;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+        }
+
+        button[type="submit"]:hover::before {
+            left: 0;
+        }
+
+        button[type="button"] {
+            background: rgba(0, 242, 255, 0.1);
+            color: #00f2ff;
+            border: 1px solid #00f2ff;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button[type="button"]:hover {
+            background: rgba(0, 242, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .quiz-container {
+                padding: 25px;
+            }
+            textarea {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="quiz-container">
+        <h2>Answer the following questions</h2>
+        <form id="vivaForm" method="POST" action="/submit">
+            {% for i in range(5) %}
+            <div class="question-block">
+                <p><strong>Q{{ i + 1 }}:</strong> {{ questions[i]["question"] }}</p>
+                <input type="hidden" name="question_{{ i }}" value="{{ questions[i]['question'] }}">
+                <textarea id="answer_{{ i }}" name="answer_{{ i }}" placeholder="Type your answer here..." required></textarea>
+                <button type="button" onclick="startVoiceInput({{ i }})">🎤 Speak</button>
+            </div>
+            {% endfor %}
+
+            <input type="hidden" name="name" value="{{ name }}">
+            <input type="hidden" name="roll" value="{{ roll }}">
+            <input type="hidden" name="experiment" value="{{ experiment }}">
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loader"></div>
+        <!-- <div class="loading-text">Loading...</div> -->
+    </div>
+
+ <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const loadingOverlay = document.getElementById("loadingOverlay");
+        const form = document.getElementById("vivaForm");
+
+        // Show overlay on initial load
+        loadingOverlay.classList.add("active");
+
+        // Voice intro logic
+        fetch('/voice_question_intro')
+            .then(response => response.json())
+            .then(result => {
+                console.log("Voice Intro Played:", result.message);
+            })
+            .catch(error => {
+                console.error("Error during voice intro fetch:", error);
+            })
+            .finally(() => {
+                // Hide overlay after voice intro
+                loadingOverlay.classList.remove("active");
+            });
+
+        // Show overlay on form submit
+        if (form) {
+            form.addEventListener("submit", function () {
+                loadingOverlay.classList.add("active");
+            });
+        }
+    });
+</script>
+
+
+
+
+</body>
+</html>

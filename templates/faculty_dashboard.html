@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard – Viva Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #0a0a0a;
+            font-family: 'Roboto', sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 30px 20px 60px;
+        }
+
+        /* ── TOP NAV ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 900px;
+            margin: 0 auto 32px;
+            padding: 0 4px;
+        }
+
+        .topbar-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #00f2ff;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .faculty-badge {
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 12px;
+            color: #00f2ff;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .logout-btn {
+            padding: 7px 16px;
+            background: transparent;
+            border: 1px solid #333;
+            border-radius: 20px;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .logout-btn:hover { border-color: #ff4444; color: #ff6b6b; }
+
+        /* ── CARD SHELL (reused across sections) ── */
+        .card {
+            position: relative;
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border-radius: 14px;
+            overflow: hidden;
+            max-width: 900px;
+            margin: 0 auto 28px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(
+                transparent 315deg,
+                #00f2ff 315deg,
+                #00f2ff 360deg,
+                transparent 360deg
+            );
+            animation: rotate 6s linear infinite;
+            opacity: 0.5;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border-radius: 12px;
+        }
+
+        .card-inner {
+            position: relative;
+            z-index: 1;
+            padding: 28px 32px;
+        }
+
+        /* ── SECTION HEADERS ── */
+        .section-header {
+            font-family: 'Orbitron', sans-serif;
+            color: #00f2ff;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #1e2d3d;
+        }
+
+        /* ── PROFILE SECTION ── */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0077ff, #00f2ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-family: 'Orbitron', sans-serif;
+            color: #000;
+            font-weight: 700;
+        }
+
+        .profile-info h3 {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* ── ALERTS ── */
+        .alert {
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .alert-error {
+            background: rgba(255, 60, 60, 0.12);
+            border: 1px solid rgba(255, 60, 60, 0.35);
+            color: #ff6b6b;
+        }
+
+        .alert-success {
+            background: rgba(0, 242, 255, 0.08);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: #00f2ff;
+        }
+
+        /* ── ADD SUBJECT FORM ── */
+        .inline-form {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .inline-form input {
+            flex: 1;
+            padding: 11px 18px;
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid #2d3748;
+            border-radius: 25px;
+            color: #fff;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            transition: all 0.4s ease;
+            outline: none;
+        }
+
+        .inline-form input:focus {
+            border-color: #00f2ff;
+            box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.15);
+        }
+
+        .btn-primary {
+            padding: 11px 24px;
+            background: linear-gradient(to right, #0077ff, #00f2ff);
+            color: #000;
+            border: none;
+            border-radius: 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(to right, #00f2ff, #0077ff);
+            transition: all 0.4s ease;
+            z-index: -1;
+        }
+
+        .btn-primary:hover { transform: translateY(-1px); }
+        .btn-primary:hover::before { left: 0; }
+
+        /* ── SUBJECTS TABLE ── */
+        .subjects-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .subject-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #1e2d3d;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .subject-row:hover {
+            border-color: rgba(0, 242, 255, 0.3);
+            background: rgba(0, 242, 255, 0.04);
+        }
+
+        .subject-name {
+            font-size: 15px;
+            color: #e2e8f0;
+        }
+
+        .subject-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .q-count {
+            font-size: 12px;
+            color: #00f2ff;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 12px;
+            padding: 3px 10px;
+        }
+
+        .no-subjects {
+            text-align: center;
+            color: #444;
+            font-size: 14px;
+            padding: 20px;
+        }
+
+        /* ── UPLOAD FORM ── */
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        label.field-label {
+            display: block;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 300;
+            padding-left: 14px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            transition: color 0.3s;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 18px;
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid #2d3748;
+            border-radius: 25px;
+            color: #fff;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.4s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300f2ff'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 14px;
+        }
+
+        select:focus {
+            border-color: #00f2ff;
+            box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.15);
+        }
+
+        select option { background: #1a1a1a; }
+
+        .file-drop-zone {
+            border: 2px dashed #2d3748;
+            border-radius: 14px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            border-color: #00f2ff;
+            background: rgba(0, 242, 255, 0.04);
+        }
+
+        .file-drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drop-icon { font-size: 36px; margin-bottom: 10px; }
+
+        .drop-text {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .drop-text strong { color: #00f2ff; }
+
+        .file-types {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #3d5166;
+            letter-spacing: 1px;
+        }
+
+        #file-name-display {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #00f2ff;
+            min-height: 18px;
+        }
+
+        /* Loading overlay for upload */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.88);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active { opacity: 1; pointer-events: all; }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .loader::before {
+            content: '';
+            width: 48px;
+            height: 5px;
+            background: rgba(0, 242, 255, 0.2);
+            position: absolute;
+            top: 60px; left: 0;
+            border-radius: 50%;
+            animation: shadow324 0.5s linear infinite;
+        }
+
+        .loader::after {
+            content: '';
+            width: 100%; height: 100%;
+            background: #00f2ff;
+            position: absolute;
+            top: 0; left: 0;
+            border-radius: 4px;
+            animation: jump7456 0.5s linear infinite;
+        }
+
+        .loading-msg {
+            font-family: 'Orbitron', sans-serif;
+            color: #00f2ff;
+            font-size: 14px;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .loading-sub {
+            color: #444;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        @keyframes rotate {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes jump7456 {
+            15%  { border-bottom-right-radius: 3px; }
+            25%  { transform: translateY(9px) rotate(22.5deg); }
+            50%  { transform: translateY(18px) scale(1, .9) rotate(45deg); border-bottom-right-radius: 40px; }
+            75%  { transform: translateY(9px) rotate(67.5deg); }
+            100% { transform: translateY(0) rotate(90deg); }
+        }
+
+        @keyframes shadow324 {
+            0%, 100% { transform: scale(1, 1); }
+            50%       { transform: scale(1.2, 1); }
+        }
+
+        @media (max-width: 600px) {
+            .card-inner { padding: 22px 18px; }
+            .inline-form { flex-direction: column; }
+            .inline-form input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <span class="topbar-title">⚡ VIVA AGENT</span>
+        <div class="topbar-right">
+            <span class="faculty-badge">{{ faculty.name }}</span>
+            <a href="/faculty/logout" class="logout-btn">Logout →</a>
+        </div>
+    </div>
+
+    <!-- ALERTS -->
+    {% if error %}
+    <div class="alert alert-error">⚠ {{ error }}</div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success">✓ {{ success }}</div>
+    {% endif %}
+
+    <!-- PROFILE CARD -->
+    <div class="card">
+        <div class="card-inner">
+            <div class="section-header">Faculty Profile</div>
+            <div class="profile-grid">
+                <div class="avatar">{{ faculty.name[0].upper() }}</div>
+                <div class="profile-info">
+                    <h3>{{ faculty.name }}</h3>
+                    <p>{{ faculty.profile if faculty.profile else 'No profile information provided.' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MY SUBJECTS CARD -->
+    <div class="card">
+        <div class="card-inner">
+            <div class="section-header">My Subjects</div>
+
+            <!-- Add Subject Form -->
+            <form method="POST" action="/faculty/add_subject" style="margin-bottom: 20px;">
+                <div class="inline-form">
+                    <input type="text" name="subject_name"
+                           placeholder="Enter new subject name (e.g. Data Structures)" required>
+                    <button type="submit" class="btn-primary">+ Add Subject</button>
+                </div>
+            </form>
+
+            <!-- Subjects List -->
+            {% if subjects %}
+            <div class="subjects-list">
+                {% for subj in subjects %}
+                <div class="subject-row">
+                    <span class="subject-name">📚 {{ subj.name }}</span>
+                    <div class="subject-meta">
+                        <span class="q-count">{{ subj.question_count }} questions</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-subjects">
+                No subjects added yet. Add your first subject above to get started.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- UPLOAD MATERIALS CARD -->
+    <div class="card">
+        <div class="card-inner">
+            <div class="section-header">Upload Learning Materials</div>
+            <p style="color:#555;font-size:13px;margin-bottom:22px;">
+                Upload PDFs, PPTs, DOCX, or TXT files. The AI will automatically generate a
+                question bank from the content for student viva exams.
+            </p>
+
+            <form id="uploadForm" method="POST" action="/faculty/upload" enctype="multipart/form-data" class="upload-form">
+
+                <!-- Subject Selector -->
+                <div>
+                    <label class="field-label" for="upload_subject">Select Subject</label>
+                    <select id="upload_subject" name="upload_subject" required>
+                        <option value="">— Choose a subject —</option>
+                        {% for subj in subjects %}
+                        <option value="{{ subj.name }}">{{ subj.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if not subjects %}
+                    <p style="color:#555;font-size:12px;margin-top:8px;padding-left:14px;">
+                        ↑ Add a subject first, then you can upload materials for it.
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- File Drop Zone -->
+                <div>
+                    <label class="field-label">Upload File</label>
+                    <div class="file-drop-zone" id="dropZone">
+                        <input type="file" id="material_file" name="material_file"
+                               accept=".pdf,.pptx,.docx,.txt" required>
+                        <div class="drop-icon">📎</div>
+                        <div class="drop-text">
+                            <strong>Click to browse</strong> or drag & drop your file here
+                        </div>
+                        <div class="file-types">PDF · PPTX · DOCX · TXT</div>
+                        <div id="file-name-display"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:13px;">
+                    🚀 Upload & Generate Questions
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loader"></div>
+        <div class="loading-msg">Generating Questions...</div>
+        <div class="loading-sub">AI is analysing your material. This may take 30–60 seconds.</div>
+    </div>
+
+    <script>
+        // Show filename on selection
+        const fileInput = document.getElementById('material_file');
+        const fileDisplay = document.getElementById('file-name-display');
+        const dropZone = document.getElementById('dropZone');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileDisplay.textContent = '✓ ' + fileInput.files[0].name;
+            }
+        });
+
+        // Drag & drop highlight
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                fileDisplay.textContent = '✓ ' + e.dataTransfer.files[0].name;
+            }
+        });
+
+        // Show loading overlay on upload submit
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        });
+
+        // Label colour on focus
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('focus', () => {
+                const lbl = el.closest('div')?.querySelector('.field-label');
+                if (lbl) lbl.style.color = '#00f2ff';
+            });
+            el.addEventListener('blur', () => {
+                const lbl = el.closest('div')?.querySelector('.field-label');
+                if (lbl) lbl.style.color = '';
+            });
+        });
+    </script>
+
+</body>
+</html>
