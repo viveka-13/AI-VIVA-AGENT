@@ -150,7 +150,7 @@
         <p><strong>Roll No:</strong> <span>{{ report.roll }}</span></p>
         <p><strong>Experiment:</strong> <span>{{ report.experiment }}</span></p>
         <hr>
-        <p class="highlight">Total Marks: {{ report.total }}/10</p>
+        <p class="highlight">Total Marks: {{ report.total }}/{{ report.max_marks }}</p>
         <hr>
         <form action="/" method="get">
             <button type="submit" class="reset-button">

@@ -303,10 +303,10 @@
     <div class="quiz-container">
         <h2>Answer the following questions</h2>
         <form id="vivaForm" method="POST" action="/submit">
-            {% for i in range(5) %}
+            {% for i in range(10) %}
             <div class="question-block">
                 <p><strong>Q{{ i + 1 }}:</strong> {{ questions[i]["question"] }}</p>
-                <input type="hidden" name="question_{{ i }}" value="{{ questions[i]['question'] }}">
+                <input type="hidden" id="qtext_{{ i }}" name="question_{{ i }}" value="{{ questions[i]['question'] }}">
                 <textarea id="answer_{{ i }}" name="answer_{{ i }}" placeholder="Type your answer here..." required></textarea>
                 <button type="button" onclick="startVoiceInput({{ i }})">🎤 Speak</button>
             </div>
@@ -353,6 +353,82 @@
             });
         }
     });
+
+    function startVoiceInput(index) {
+        const button = event.target;
+        const textArea = document.getElementById('answer_' + index);
+        const questionText = document.getElementById('qtext_' + index).value;
+
+        // Check if the user already answered this question
+        if (button.getAttribute('data-answered') === 'true' || textArea.value.trim() !== '') {
+            // Stop any current reading and read the question + answer
+            window.speechSynthesis.cancel();
+            const speechText = "Question " + (index + 1) + ". " + questionText + ". Your answer: " + textArea.value.trim();
+            const utterance = new SpeechSynthesisUtterance(speechText);
+            window.speechSynthesis.speak(utterance);
+            return; // Exit the function so the microphone does NOT turn on
+        }
+
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert("Your browser does not support voice input. Please use Google Chrome or Microsoft Edge.");
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        const originalText = button.innerHTML;
+
+        button.innerHTML = "🔴 Listening...";
+        button.style.color = "#ff6b6b";
+
+        recognition.onresult = function (event) {
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                }
+            }
+            if (finalTranscript !== '') {
+                if (textArea.value.trim() !== '') {
+                    textArea.value += ' ' + finalTranscript;
+                } else {
+                    textArea.value = finalTranscript;
+                }
+            }
+        };
+
+        recognition.onerror = function (event) {
+            console.error("Speech recognition error", event.error);
+            button.innerHTML = originalText;
+            button.style.color = "";
+        };
+
+        recognition.onend = function () {
+            const finalAnswer = textArea.value.trim();
+            button.style.color = "";
+            
+            if (finalAnswer !== '') {
+                // Lock the answer so it can only be done once
+                button.setAttribute('data-answered', 'true');
+                button.innerHTML = "🔊 Read Answer";
+                textArea.setAttribute('readonly', true);
+                
+                // Read back immediately after recording
+                const speechText = "Question " + (index + 1) + ". " + questionText + ". Your answer: " + finalAnswer;
+                const utterance = new SpeechSynthesisUtterance(speechText);
+                window.speechSynthesis.speak(utterance);
+            } else {
+                button.innerHTML = originalText;
+            }
+        };
+
+        recognition.start();
+    }
 </script>
 
 

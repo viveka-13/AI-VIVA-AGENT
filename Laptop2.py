@@ -12,7 +12,7 @@ def slugify(name: str) -> str:
     return re.sub(r"[^a-z0-9_]", "_", name.strip().lower())
 
 
-def generate_questions(experiment_number, filepath="questions.json", num_questions=5):
+def generate_questions(experiment_number, filepath="questions.json", num_questions=10):
     """
     Generate questions for a given subject or experiment number.
 

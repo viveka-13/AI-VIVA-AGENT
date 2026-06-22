@@ -5,6 +5,7 @@ An AI-powered academic platform that automates the oral examination (viva) proce
 ## 🌟 Features
 
 *   **Student Portal**: Students enter their details, select a subject, and answer automatically generated questions. Features Text-To-Speech (TTS) voice announcements and a sleek cyber-aesthetic UI.
+*   **Interactive Voice Dictation**: Students can use their browser's microphone to dictate answers. After recording, the system locks the answer and realistically reads the question and captured answer back out loud.
 *   **Faculty Portal**: Instructors can register, manage subjects, and upload study materials (`.pdf`, `.pptx`, `.docx`, `.txt`).
 *   **AI Question Generation**: Automatically extracts text from uploaded materials and generates Q&A pairs using local **Ollama** LLM processing (no external API keys required).
 *   **AI Answer Evaluation**: The system evaluates student answers using local LLM inference to determine if they are Correct, Partially Correct, or Incorrect, then generates a final grade report.

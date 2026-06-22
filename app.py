@@ -138,14 +138,15 @@ def submit():
         return redirect(url_for("index"))
 
     responses = []
-    for i in range(5):
+    for i in range(10):
         question = request.form.get(f"question_{i}", "")
         answer = request.form.get(f"answer_{i}", "")
-        responses.append({
-            "question_number": i + 1,
-            "question": question,
-            "user_answer": answer
-        })
+        if question:  # Only add if the question was actually presented
+            responses.append({
+                "question_number": len(responses) + 1,
+                "question": question,
+                "user_answer": answer
+            })
 
     response_data = {
         "name": name,

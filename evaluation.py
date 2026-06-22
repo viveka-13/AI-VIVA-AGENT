@@ -1,21 +1,20 @@
 def evaluation_agent(data):
-    score_map = {
-        "correct.": 2,
-        "correct": 2,
-        "partially correct.": 1,
-        "partially correct": 1,
-        "incorrect.": 0,
-        "incorrect": 0
-    }
-
-    if len(data) != 5:
-        raise ValueError("Exactly 5 validation results are expected.")
+    if len(data) == 0:
+        return 0
 
     total_score = 0
     for result in data:
-        if result not in score_map:
-            raise ValueError(f"Invalid validation result: {result}")
-        total_score += score_map[result]
+        result_lower = result.lower()
+        if "partially correct" in result_lower:
+            total_score += 1
+        elif "incorrect" in result_lower:
+            total_score += 0
+        elif "correct" in result_lower:
+            total_score += 2
+        else:
+            # Fallback for unexpected LLM output
+            print(f"Warning: Unexpected LLM validation result: '{result}'. Defaulting to incorrect.")
+            total_score += 0
 
     return total_score
 
