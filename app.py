@@ -4,6 +4,10 @@ from Laptop2 import generate_questions
 from merge_answers import combine_responses
 from flask import jsonify
 from report_generator import generate_report
+import database
+from flask import send_file
+import gradebook_exporter
+import io
 import subprocess
 import multiprocessing
 import os
@@ -161,10 +165,43 @@ def submit():
         json.dump(response_data, f, indent=4)
 
     combine_responses()
-
     subprocess.run([sys.executable, os.path.join("llm_check.py")], check=True)
+    
+    # Parse output.txt to get verdicts
+    verdicts = []
+    if os.path.exists("output.txt"):
+        with open("output.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                if '.' in line:
+                    _, result = line.split('.', 1)
+                    verdicts.append(result.strip())
+    
+    # Combine into answers_data
+    answers_data = []
+    for i, resp in enumerate(responses):
+        v = verdicts[i] if i < len(verdicts) else "incorrect"
+        answers_data.append({
+            "question": resp["question"],
+            "student_answer": resp["user_answer"],
+            "correct_answer": "", # not provided by this pipeline currently
+            "raw_verdict": v
+        })
+        
+    total_score = sum(database._parse_verdict(ans["raw_verdict"])[1] for ans in answers_data)
+    max_marks = len(answers_data) * 2
+    
+    session_id = database.save_viva_session(
+        name, roll, experiment, slugify(experiment),
+        answers_data, total_score, max_marks
+    )
 
     report = generate_report(name, roll, experiment, responses)
+    report["session_id"] = session_id
+    
+    # Also fetch history
+    history = database.get_student_history(name, roll)
+    report["history"] = history
+    
     return render_template("report.html", report=report)
 
 
@@ -400,6 +437,8 @@ def faculty_logout():
 # ─────────────────────────────────────────────────────────────
 # RUN
 # ─────────────────────────────────────────────────────────────
+
+database.init_db()
 
 if __name__ == "__main__":
     app.run(debug=True)

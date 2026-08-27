@@ -51,3 +51,10 @@ An AI-powered academic platform that automates the oral examination (viva) proce
 
 ## 📝 License
 This project is open-source and available under the MIT License.
+
+
+## Analytics & Reporting
+- Added full SQLite backend to track per-question difficulty
+- Added Chart.js faculty dashboard analytics
+- Added ReportLab PDF generation for student reports
+- Added Excel and CSV gradebook export

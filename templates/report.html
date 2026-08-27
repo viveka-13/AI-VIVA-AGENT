@@ -145,7 +145,8 @@
 </head>
 <body>
     <div class="report-box">
-        <h2>🎓 Viva Report</h2>
+        <div style="text-align: right; margin-bottom: 20px;"><a href="/download_report/{{ report.session_id }}" style="padding: 10px 20px; background: #00f2ff; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold; font-family: 'Orbitron', sans-serif;">📥 Download PDF Report</a></div>
+        <h2>✨ Viva Report</h2>
         <p><strong>Name:</strong> <span>{{ report.name }}</span></p>
         <p><strong>Roll No:</strong> <span>{{ report.roll }}</span></p>
         <p><strong>Experiment:</strong> <span>{{ report.experiment }}</span></p>
@@ -158,5 +159,47 @@
             </button>
         </form>
     </div>
+
+    <!-- HISTORY CHART -->
+    {% if report.history and report.history|length > 1 %}
+    <div style="max-width: 800px; margin: 40px auto; background: #121212; padding: 20px; border-radius: 10px; border: 1px solid #333;">
+        <h3 style="color:#00f2ff; font-family:'Orbitron', sans-serif; text-align:center; margin-bottom: 20px;">Score Progression</h3>
+        <canvas id="historyChart" height="250"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const histData = {{ report.history|tojson }};
+        const labels = histData.map(h => {
+            const d = new Date(h.timestamp);
+            return d.toLocaleDateString() + ' (' + h.subject + ')';
+        });
+        const scores = histData.map(h => (h.total_score / h.max_marks) * 100);
+        
+        new Chart(document.getElementById('historyChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Score %',
+                    data: scores,
+                    borderColor: '#00f2ff',
+                    backgroundColor: 'rgba(0, 242, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 100, grid: { color: '#222' } },
+                    x: { grid: { color: '#222' } }
+                }
+            }
+        });
+    </script>
+    {% endif %}
 </body>
+
 </html>

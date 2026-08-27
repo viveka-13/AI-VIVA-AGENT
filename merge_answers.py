@@ -30,4 +30,4 @@ def combine_responses(validation_file="validation.json", response_file="response
     with open(output_file, "w") as outfile:
         json.dump(combined_data, outfile, indent=4)
 
-    print(f"✅ Combined data saved to '{output_file}'")
+    print(f"[SUCCESS] Combined data saved to '{output_file}'")
