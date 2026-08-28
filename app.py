@@ -419,7 +419,7 @@ def faculty_upload():
         return redirect(url_for("faculty_dashboard"))
 
     session["faculty_upload_success"] = (
-        f"✅ Uploaded '{uploaded_file.filename}' for subject '{subject_name}'. "
+        f"[SUCCESS] Uploaded '{uploaded_file.filename}' for subject '{subject_name}'. "
         f"Generated {result['questions_generated']} new questions "
         f"(total in bank: {result['total_in_bank']})."
     )
@@ -438,7 +438,72 @@ def faculty_logout():
 # RUN
 # ─────────────────────────────────────────────────────────────
 
+
+# ==========================================
+# ANALYTICS & REPORTING
+# ==========================================
+
+@app.route("/faculty/analytics", methods=["GET"])
+def faculty_analytics():
+    if not session.get("faculty_logged_in"):
+        return redirect(url_for("faculty_home"))
+        
+    faculty_name = session.get("faculty_name", "")
+    all_subjects = load_json(SUBJECTS_FILE)
+    my_subjects = [s for s in all_subjects if s.get("faculty", "").lower() == faculty_name.lower()]
+    
+    return render_template("faculty_analytics.html", faculty_name=faculty_name, subjects=my_subjects)
+
+
+@app.route("/api/analytics/<subject_slug>", methods=["GET"])
+def api_analytics(subject_slug):
+    if not session.get("faculty_logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
+    data = database.get_analytics_for_subject(subject_slug)
+    return jsonify(data)
+
+
+@app.route("/faculty/export/<subject_slug>/csv", methods=["GET"])
+def export_csv_route(subject_slug):
+    if not session.get("faculty_logged_in"):
+        return redirect(url_for("faculty_home"))
+    csv_data = gradebook_exporter.export_csv(subject_slug)
+    return send_file(
+        io.BytesIO(csv_data.encode("utf-8")),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=f"{subject_slug}_gradebook.csv"
+    )
+
+
+@app.route("/faculty/export/<subject_slug>/xlsx", methods=["GET"])
+def export_xlsx_route(subject_slug):
+    if not session.get("faculty_logged_in"):
+        return redirect(url_for("faculty_home"))
+    xlsx_data = gradebook_exporter.export_xlsx(subject_slug)
+    return send_file(
+        io.BytesIO(xlsx_data),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=f"{subject_slug}_gradebook.xlsx"
+    )
+
+@app.route("/download_report/<int:session_id>", methods=["GET"])
+def download_pdf_report(session_id):
+    from report_generator import generate_pdf_report
+    pdf_data = generate_pdf_report(session_id)
+    if not pdf_data:
+        return "Report not found", 404
+        
+    return send_file(
+        io.BytesIO(pdf_data),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"viva_report_{session_id}.pdf"
+    )
+
 database.init_db()
+
 
 if __name__ == "__main__":
     app.run(debug=True)

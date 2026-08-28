@@ -68,7 +68,7 @@ def main():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(full_output)
 
-    print("✅ Validation complete. Output written to output.txt")
+    print("[SUCCESS] Validation complete. Output written to output.txt")
 
 
 
