@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessions - {{ subject_name }} - Viva Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0a0a0a;
+            font-family: 'Roboto', sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 30px 20px 60px;
+        }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            max-width: 1000px; margin: 0 auto 32px;
+        }
+        .topbar-title {
+            font-family: 'Orbitron', sans-serif; color: #00f2ff;
+            font-size: 16px; letter-spacing: 2px;
+        }
+        .nav-btn {
+            padding: 7px 16px; background: transparent; border: 1px solid #333;
+            border-radius: 20px; color: #ccc; font-size: 12px; cursor: pointer;
+            text-decoration: none; transition: all 0.3s ease;
+        }
+        .nav-btn:hover { border-color: #00f2ff; color: #00f2ff; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .table-card {
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border: 1px solid #222; border-radius: 12px; padding: 20px; overflow-x: auto;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            text-align: left; padding: 12px; color: #888;
+            border-bottom: 1px solid #333; font-weight: 500;
+        }
+        td { padding: 12px; border-bottom: 1px solid #222; color: #ddd; }
+        tr:hover { background: rgba(0, 242, 255, 0.03); }
+        .badge {
+            padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
+        }
+        .badge-warn { background: rgba(255, 60, 60, 0.15); color: #ff6b6b; }
+        .badge-ok { background: rgba(0, 242, 255, 0.1); color: #00f2ff; }
+        .link-btn {
+            padding: 5px 12px; background: rgba(0, 242, 255, 0.1);
+            border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 6px;
+            color: #00f2ff; text-decoration: none; font-size: 11px;
+            transition: all 0.2s;
+        }
+        .link-btn:hover { background: rgba(0, 242, 255, 0.2); }
+        .empty-state {
+            text-align: center; padding: 40px; color: #555; font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <span class="topbar-title">SESSIONS: {{ subject_name }}</span>
+        <a href="/faculty/dashboard" class="nav-btn">Back to Dashboard</a>
+    </div>
+    <div class="container">
+        <div class="table-card">
+            {% if sessions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Roll No</th>
+                        <th>Date</th>
+                        <th>Score</th>
+                        <th>Grade</th>
+                        <th>Flags</th>
+                        <th>Events</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sessions %}
+                    <tr>
+                        <td>{{ s.student_name }}</td>
+                        <td>{{ s.roll_no }}</td>
+                        <td>{{ s.timestamp[:10] }}</td>
+                        <td>{{ s.total_score }}/{{ s.max_marks }}</td>
+                        <td>{{ s.grade }}</td>
+                        <td>
+                            <span class="badge {{ 'badge-warn' if s.flag_count > 0 else 'badge-ok' }}">
+                                {{ s.flag_count }} flags
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {{ 'badge-warn' if s.event_count > 0 else 'badge-ok' }}">
+                                {{ s.event_count }} events
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/faculty/session/{{ s.id }}/integrity" class="link-btn">View Report</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">No completed sessions for this subject yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -315,6 +315,7 @@
             <input type="hidden" name="name" value="{{ name }}">
             <input type="hidden" name="roll" value="{{ roll }}">
             <input type="hidden" name="experiment" value="{{ experiment }}">
+            <input type="hidden" name="session_id" value="{{ session_id }}">
             <button type="submit">Submit</button>
         </form>
     </div>
@@ -433,6 +434,162 @@
 
 
 
+
+
+    <!-- PROCTORING: face-api.js for face detection -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+    <!-- PROCTORING: Webcam + Tab Switch Detection -->
+    <style>
+        #proctoringWarning {
+            display: none;
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 60, 60, 0.15);
+            border: 1px solid rgba(255, 60, 60, 0.4);
+            color: #ff6b6b;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        #webcamPreview {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            object-fit: cover;
+            opacity: 0.6;
+            z-index: 9998;
+        }
+    </style>
+
+    <div id="proctoringWarning">&#9888; Face not detected. Please stay visible to the camera.</div>
+    <video id="webcamPreview" autoplay muted playsinline></video>
+
+    <script>
+    (function() {
+        const SESSION_ID = '{{ session_id }}';
+        if (!SESSION_ID || SESSION_ID === 'None') return;
+
+        const API_URL = '/api/session/' + SESSION_ID + '/integrity-event';
+
+        // ========== TAB SWITCH DETECTION ==========
+        let tabHiddenAt = null;
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                tabHiddenAt = new Date();
+            } else if (tabHiddenAt) {
+                const duration = (new Date() - tabHiddenAt) / 1000;
+                tabHiddenAt = null;
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: 'tab_switch',
+                        timestamp: new Date().toISOString(),
+                        duration_seconds: Math.round(duration * 10) / 10,
+                        details: 'Student switched away from viva tab for ' + duration.toFixed(1) + 's'
+                    })
+                }).catch(function() {});
+            }
+        });
+
+        window.addEventListener('blur', function() {
+            if (!tabHiddenAt) tabHiddenAt = new Date();
+        });
+        window.addEventListener('focus', function() {
+            if (tabHiddenAt) {
+                const duration = (new Date() - tabHiddenAt) / 1000;
+                tabHiddenAt = null;
+                if (duration > 1) {
+                    fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event_type: 'focus_loss',
+                            timestamp: new Date().toISOString(),
+                            duration_seconds: Math.round(duration * 10) / 10,
+                            details: 'Window lost focus for ' + duration.toFixed(1) + 's'
+                        })
+                    }).catch(function() {});
+                }
+            }
+        });
+
+        // ========== WEBCAM FACE DETECTION ==========
+        const warning = document.getElementById('proctoringWarning');
+        const video = document.getElementById('webcamPreview');
+        let faceLostSince = null;
+        const FACE_LOST_THRESHOLD = 10; // seconds before logging event
+
+        async function initWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                video.srcObject = stream;
+
+                // Load face-api models from CDN
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+
+                // Start periodic face checks
+                setInterval(checkFace, 15000); // every 15 seconds
+                setTimeout(checkFace, 3000); // first check after 3s
+            } catch (e) {
+                console.log('[PROCTOR] Webcam access denied or unavailable:', e.message);
+                video.style.display = 'none';
+            }
+        }
+
+        async function checkFace() {
+            try {
+                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+                if (detections.length === 0) {
+                    if (!faceLostSince) {
+                        faceLostSince = new Date();
+                    }
+                    const elapsed = (new Date() - faceLostSince) / 1000;
+                    warning.style.display = 'block';
+                    if (elapsed >= FACE_LOST_THRESHOLD) {
+                        fetch(API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event_type: 'face_lost',
+                                timestamp: new Date().toISOString(),
+                                duration_seconds: Math.round(elapsed),
+                                details: 'No face detected for ' + Math.round(elapsed) + 's'
+                            })
+                        }).catch(function() {});
+                        faceLostSince = new Date(); // reset to avoid spamming
+                    }
+                } else {
+                    faceLostSince = null;
+                    warning.style.display = 'none';
+                }
+            } catch (e) {
+                console.log('[PROCTOR] Face detection error:', e.message);
+            }
+        }
+
+        // Start webcam after page loads
+        if (typeof faceapi !== 'undefined') {
+            initWebcam();
+        } else {
+            // face-api.js is deferred, wait for it
+            window.addEventListener('load', function() {
+                setTimeout(initWebcam, 1000);
+            });
+        }
+    })();
+    </script>
 
 </body>
 </html>

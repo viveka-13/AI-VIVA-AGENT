@@ -505,7 +505,7 @@
                 <div class="subject-row">
                     <span class="subject-name">📚 {{ subj.name }}</span>
                     <div class="subject-meta">
-                        <span class="q-count">{{ subj.question_count }} questions</span>
+                        <span class="q-count">{{ subj.question_count }}</span> | <a href="/faculty/sessions/{{ subj.slug }}" style="color:#00f2ff; text-decoration:none; font-size:12px;">View Sessions</a><span style="display:none"> questions</span>
                     </div>
                 </div>
                 {% endfor %}

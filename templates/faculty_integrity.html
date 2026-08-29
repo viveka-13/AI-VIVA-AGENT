@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrity Report - Viva Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #0a0a0a;
+            font-family: 'Roboto', sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 30px 20px 60px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1000px;
+            margin: 0 auto 32px;
+        }
+
+        .topbar-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #00f2ff;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .nav-btn {
+            padding: 7px 16px;
+            background: transparent;
+            border: 1px solid #333;
+            border-radius: 20px;
+            color: #ccc;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { border-color: #00f2ff; color: #00f2ff; }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        /* Advisory Banner */
+        .advisory-banner {
+            background: rgba(255, 170, 0, 0.08);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 10px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .advisory-banner .icon { font-size: 20px; }
+        .advisory-banner .text {
+            font-size: 13px;
+            color: #ffaa00;
+            line-height: 1.5;
+        }
+
+        /* Student Info Card */
+        .info-card {
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .info-item label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-item .value {
+            font-size: 16px;
+            font-weight: 500;
+            color: #fff;
+            margin-top: 4px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-family: 'Orbitron', sans-serif;
+            color: #00f2ff;
+            font-size: 14px;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #222;
+        }
+
+        /* Summary Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .mini-stat {
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border: 1px solid #222;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .mini-stat .num {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .mini-stat .label {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .num-warn { color: #ff6b6b; }
+        .num-ok { color: #00f2ff; }
+
+        /* Similarity Flags */
+        .flag-card {
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .flag-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 3px; height: 100%;
+        }
+        .flag-card.flag-source::before { background: #ff6b6b; }
+        .flag-card.flag-student::before { background: #ffaa00; }
+
+        .flag-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .flag-q {
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+        }
+        .flag-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-source { background: rgba(255, 60, 60, 0.15); color: #ff6b6b; }
+        .badge-student { background: rgba(255, 170, 0, 0.15); color: #ffaa00; }
+
+        .similarity-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: #ff6b6b;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .compare-box {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .compare-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .compare-text {
+            font-size: 13px;
+            color: #ccc;
+            line-height: 1.5;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #222;
+        }
+        .timeline-event {
+            position: relative;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border: 1px solid #222;
+            border-radius: 8px;
+        }
+        .timeline-event::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 16px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .event-face::before { background: #ff6b6b; }
+        .event-tab::before { background: #ffaa00; }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .event-type {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .event-time {
+            font-size: 11px;
+            color: #666;
+            font-family: monospace;
+        }
+        .event-detail {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-style: italic;
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border: 1px solid #222;
+            border-radius: 12px;
+        }
+
+        .section-block { margin-bottom: 32px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <span class="topbar-title">INTEGRITY REPORT</span>
+        <a href="/faculty/dashboard" class="nav-btn">Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+
+        <!-- Advisory Banner -->
+        <div class="advisory-banner">
+            <span class="icon">&#9888;</span>
+            <span class="text">
+                <strong>Advisory Only:</strong> These flags are provided for faculty review and judgment.
+                They are NOT automatic penalties or disqualifications. High similarity may be coincidental
+                and tab-switches may have legitimate reasons.
+            </span>
+        </div>
+
+        <!-- Student Info -->
+        <div class="info-card">
+            <div class="info-item">
+                <label>Student</label>
+                <div class="value">{{ session.student_name }}</div>
+            </div>
+            <div class="info-item">
+                <label>Roll No</label>
+                <div class="value">{{ session.roll_no }}</div>
+            </div>
+            <div class="info-item">
+                <label>Subject</label>
+                <div class="value">{{ session.subject }}</div>
+            </div>
+            <div class="info-item">
+                <label>Score</label>
+                <div class="value">{{ session.total_score }} / {{ session.max_marks }} ({{ session.grade }})</div>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stats-row">
+            <div class="mini-stat">
+                <div class="num {{ 'num-warn' if similarity_flags|length > 0 else 'num-ok' }}">{{ similarity_flags|length }}</div>
+                <div class="label">Similarity Flags</div>
+            </div>
+            <div class="mini-stat">
+                <div class="num {{ 'num-warn' if event_summary.face_lost_count > 0 else 'num-ok' }}">{{ event_summary.face_lost_count }}</div>
+                <div class="label">Face Lost Events</div>
+            </div>
+            <div class="mini-stat">
+                <div class="num {{ 'num-warn' if event_summary.tab_switch_count > 0 else 'num-ok' }}">{{ event_summary.tab_switch_count }}</div>
+                <div class="label">Tab Switches</div>
+            </div>
+            <div class="mini-stat">
+                <div class="num num-ok">{{ event_summary.total_events }}</div>
+                <div class="label">Total Events</div>
+            </div>
+        </div>
+
+        <!-- SIMILARITY FLAGS -->
+        <div class="section-block">
+            <div class="section-header">SIMILARITY / PLAGIARISM FLAGS</div>
+
+            {% if similarity_flags %}
+                {% for flag in similarity_flags %}
+                <div class="flag-card flag-{{ flag.flag_type }}">
+                    <div class="flag-header">
+                        <span class="flag-q">Question {{ flag.question_number }}</span>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span class="flag-badge {{ 'badge-source' if flag.flag_type == 'source' else 'badge-student' }}">
+                                {{ 'SOURCE MATCH' if flag.flag_type == 'source' else 'STUDENT MATCH' }}
+                            </span>
+                            <span class="similarity-score">{{ (flag.similarity_score * 100)|round(1) }}%</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #888; margin-bottom: 8px;">
+                        Matched: {{ flag.source_label }}
+                    </div>
+                    <div class="compare-grid">
+                        <div class="compare-box">
+                            <div class="compare-label">Student Answer</div>
+                            <div class="compare-text">{{ flag.student_answer_text }}</div>
+                        </div>
+                        <div class="compare-box">
+                            <div class="compare-label">Matched Text</div>
+                            <div class="compare-text">{{ flag.matched_text }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">No similarity flags detected for this session.</div>
+            {% endif %}
+        </div>
+
+        <!-- PROCTORING TIMELINE -->
+        <div class="section-block">
+            <div class="section-header">PROCTORING TIMELINE</div>
+
+            {% if event_summary.events %}
+                <div class="timeline">
+                    {% for event in event_summary.events %}
+                    <div class="timeline-event {{ 'event-face' if event.event_type == 'face_lost' else 'event-tab' }}">
+                        <div class="event-header">
+                            <span class="event-type" style="color: {{ '#ff6b6b' if event.event_type == 'face_lost' else '#ffaa00' }}">
+                                {{ 'Face Not Detected' if event.event_type == 'face_lost' else 'Tab Switch / Focus Lost' }}
+                            </span>
+                            <span class="event-time">{{ event.timestamp }}</span>
+                        </div>
+                        {% if event.duration_seconds > 0 %}
+                        <div class="event-detail">Duration: {{ event.duration_seconds|round(1) }}s</div>
+                        {% endif %}
+                        {% if event.details %}
+                        <div class="event-detail">{{ event.details }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">No proctoring events recorded for this session.</div>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

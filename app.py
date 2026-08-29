@@ -7,6 +7,7 @@ from report_generator import generate_report
 import database
 from flask import send_file
 import gradebook_exporter
+import integrity_logger
 import io
 import subprocess
 import multiprocessing
@@ -106,12 +107,18 @@ def start():
     except Exception as e:
         return f"<h2>Error generating questions: {e}</h2>"
 
+    # Create a pending session so proctoring events can be logged during the exam
+    pending_session_id = database.create_pending_session(
+        name, roll, experiment, slugify(experiment)
+    )
+
     return render_template(
         "questions.html",
         name=name,
         roll=roll,
         experiment=experiment,
-        questions=question_payload["questions"]
+        questions=question_payload["questions"],
+        session_id=pending_session_id
     )
 
 
@@ -190,10 +197,23 @@ def submit():
     total_score = sum(database._parse_verdict(ans["raw_verdict"])[1] for ans in answers_data)
     max_marks = len(answers_data) * 2
     
-    session_id = database.save_viva_session(
-        name, roll, experiment, slugify(experiment),
-        answers_data, total_score, max_marks
-    )
+    # Check if we have a pending session_id from the /start route
+    pending_id = request.form.get("session_id", None)
+    if pending_id:
+        session_id = int(pending_id)
+        database.finalize_session(session_id, answers_data, total_score, max_marks)
+    else:
+        session_id = database.save_viva_session(
+            name, roll, experiment, slugify(experiment),
+            answers_data, total_score, max_marks
+        )
+    
+    # Run similarity check (non-blocking — if model not installed, just skips)
+    try:
+        import similarity_checker
+        similarity_checker.check_session(session_id, answers_data, slugify(experiment))
+    except Exception as e:
+        print(f"[SIMILARITY] Check skipped: {e}")
 
     report = generate_report(name, roll, experiment, responses)
     report["session_id"] = session_id
@@ -418,6 +438,13 @@ def faculty_upload():
         session["faculty_upload_error"] = f"Question generation failed: {e}"
         return redirect(url_for("faculty_dashboard"))
 
+    # Invalidate embedding cache so similarity checks use updated material
+    try:
+        import similarity_checker
+        similarity_checker.invalidate_cache(subj_slug)
+    except Exception:
+        pass
+
     session["faculty_upload_success"] = (
         f"[SUCCESS] Uploaded '{uploaded_file.filename}' for subject '{subject_name}'. "
         f"Generated {result['questions_generated']} new questions "
@@ -501,6 +528,83 @@ def download_pdf_report(session_id):
         as_attachment=True,
         download_name=f"viva_report_{session_id}.pdf"
     )
+
+
+# ==========================================
+# ACADEMIC INTEGRITY
+# ==========================================
+
+@app.route("/api/session/<int:session_id>/integrity-event", methods=["POST"])
+def log_integrity_event(session_id):
+    """Receive proctoring events from the browser (face-lost, tab-switch)."""
+    data = request.get_json(silent=True) or {}
+    event_type = data.get("event_type", "unknown")
+    timestamp = data.get("timestamp", "")
+    duration = float(data.get("duration_seconds", 0))
+    details = data.get("details", "")
+    
+    integrity_logger.log_event(
+        session_id=session_id,
+        event_type=event_type,
+        timestamp=timestamp,
+        duration_seconds=duration,
+        details=details
+    )
+    return jsonify({"status": "ok"})
+
+
+@app.route("/faculty/session/<int:session_id>/integrity", methods=["GET"])
+def faculty_session_integrity(session_id):
+    """Faculty view of integrity report for a specific session."""
+    if not session.get("faculty_logged_in"):
+        return redirect(url_for("faculty_home"))
+    
+    session_data = database.get_session_by_id(session_id)
+    if not session_data:
+        return "Session not found", 404
+    
+    similarity_flags = database.get_similarity_flags(session_id)
+    event_summary = integrity_logger.get_event_summary(session_id)
+    
+    return render_template(
+        "faculty_integrity.html",
+        session=session_data["session"],
+        answers=session_data["answers"],
+        similarity_flags=similarity_flags,
+        event_summary=event_summary
+    )
+
+
+@app.route("/faculty/sessions/<subject_slug>", methods=["GET"])
+def faculty_sessions_list(subject_slug):
+    """Faculty view: list all viva sessions for a subject with integrity links."""
+    if not session.get("faculty_logged_in"):
+        return redirect(url_for("faculty_home"))
+    
+    sessions = database.get_sessions_by_subject(subject_slug)
+    
+    # Attach flag counts to each session
+    for s in sessions:
+        flags = database.get_similarity_flags(s["id"])
+        events = database.get_integrity_events(s["id"])
+        s["flag_count"] = len(flags)
+        s["event_count"] = len(events)
+    
+    # Get subject name
+    all_subjects = load_json(SUBJECTS_FILE)
+    subject_name = subject_slug
+    for subj in all_subjects:
+        if subj.get("slug") == subject_slug:
+            subject_name = subj["name"]
+            break
+    
+    return render_template(
+        "faculty_sessions.html",
+        sessions=sessions,
+        subject_name=subject_name,
+        subject_slug=subject_slug
+    )
+
 
 database.init_db()
 

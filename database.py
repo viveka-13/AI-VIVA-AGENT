@@ -40,7 +40,8 @@ def init_db():
             total_score INTEGER NOT NULL DEFAULT 0,
             max_marks   INTEGER NOT NULL DEFAULT 0,
             grade       TEXT NOT NULL DEFAULT 'F',
-            passed      INTEGER NOT NULL DEFAULT 0
+            passed      INTEGER NOT NULL DEFAULT 0,
+            status      TEXT NOT NULL DEFAULT 'completed'
         );
 
         CREATE TABLE IF NOT EXISTS session_answers (
@@ -52,6 +53,29 @@ def init_db():
             correct_answer TEXT NOT NULL DEFAULT '',
             verdict     TEXT NOT NULL DEFAULT 'incorrect',
             score       INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY (session_id) REFERENCES viva_sessions(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS similarity_flags (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id      INTEGER NOT NULL,
+            answer_id       INTEGER,
+            question_number INTEGER NOT NULL,
+            flag_type       TEXT NOT NULL DEFAULT 'source',
+            student_answer_text TEXT NOT NULL DEFAULT '',
+            matched_text    TEXT NOT NULL DEFAULT '',
+            source_label    TEXT NOT NULL DEFAULT '',
+            similarity_score REAL NOT NULL DEFAULT 0.0,
+            FOREIGN KEY (session_id) REFERENCES viva_sessions(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS integrity_events (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id      INTEGER NOT NULL,
+            event_type      TEXT NOT NULL,
+            timestamp       TEXT NOT NULL,
+            duration_seconds REAL NOT NULL DEFAULT 0.0,
+            details         TEXT NOT NULL DEFAULT '',
             FOREIGN KEY (session_id) REFERENCES viva_sessions(id) ON DELETE CASCADE
         );
     """)
@@ -92,6 +116,52 @@ def _parse_verdict(raw_verdict):
         return "incorrect", 0
 
 
+def create_pending_session(student_name, roll_no, subject, subject_slug):
+    """Create a pending session when the student starts the viva (before submission).
+    Returns the session_id so proctoring events can be logged during the exam."""
+    timestamp = datetime.now().isoformat()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO viva_sessions
+            (student_name, roll_no, subject, subject_slug, timestamp,
+             total_score, max_marks, grade, passed, status)
+        VALUES (?, ?, ?, ?, ?, 0, 0, 'F', 0, 'pending')
+    """, (student_name, roll_no, subject, subject_slug, timestamp))
+    session_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return session_id
+
+
+def finalize_session(session_id, answers_data, total_score, max_marks):
+    """Finalize a pending session with scores and answers after submission."""
+    grade, passed = _compute_grade(total_score, max_marks)
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE viva_sessions
+        SET total_score = ?, max_marks = ?, grade = ?, passed = ?, status = 'completed',
+            timestamp = ?
+        WHERE id = ?
+    """, (total_score, max_marks, grade, int(passed), datetime.now().isoformat(), session_id))
+
+    for i, ans in enumerate(answers_data):
+        verdict, score = _parse_verdict(ans.get("raw_verdict", "incorrect"))
+        cursor.execute("""
+            INSERT INTO session_answers
+                (session_id, question_number, question, student_answer,
+                 correct_answer, verdict, score)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (session_id, i + 1, ans["question"], ans.get("student_answer", ""),
+              ans.get("correct_answer", ""), verdict, score))
+
+    conn.commit()
+    conn.close()
+    return session_id
+
+
 def save_viva_session(student_name, roll_no, subject, subject_slug,
                       answers_data, total_score, max_marks):
     """
@@ -106,8 +176,8 @@ def save_viva_session(student_name, roll_no, subject, subject_slug,
     cursor.execute("""
         INSERT INTO viva_sessions
             (student_name, roll_no, subject, subject_slug, timestamp,
-             total_score, max_marks, grade, passed)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             total_score, max_marks, grade, passed, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed')
     """, (student_name, roll_no, subject, subject_slug, timestamp,
           total_score, max_marks, grade, int(passed)))
 
@@ -126,6 +196,55 @@ def save_viva_session(student_name, roll_no, subject, subject_slug,
     conn.commit()
     conn.close()
     return session_id
+
+
+def save_similarity_flag(session_id, answer_id, question_number, flag_type,
+                         student_answer_text, matched_text, source_label, similarity_score):
+    """Save a similarity/plagiarism flag for a specific answer."""
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO similarity_flags
+            (session_id, answer_id, question_number, flag_type,
+             student_answer_text, matched_text, source_label, similarity_score)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (session_id, answer_id, question_number, flag_type,
+          student_answer_text, matched_text, source_label, similarity_score))
+    conn.commit()
+    conn.close()
+
+
+def get_similarity_flags(session_id):
+    """Get all similarity flags for a session."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM similarity_flags WHERE session_id = ? ORDER BY question_number",
+        (session_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def save_integrity_event(session_id, event_type, timestamp, duration_seconds=0.0, details=""):
+    """Save a proctoring integrity event."""
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO integrity_events
+            (session_id, event_type, timestamp, duration_seconds, details)
+        VALUES (?, ?, ?, ?, ?)
+    """, (session_id, event_type, timestamp, duration_seconds, details))
+    conn.commit()
+    conn.close()
+
+
+def get_integrity_events(session_id):
+    """Get all integrity events for a session."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM integrity_events WHERE session_id = ? ORDER BY timestamp",
+        (session_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 def get_session_by_id(session_id):
@@ -156,7 +275,7 @@ def get_sessions_by_subject(subject_slug):
     """Get all viva sessions for a given subject."""
     conn = get_db()
     rows = conn.execute(
-        "SELECT * FROM viva_sessions WHERE subject_slug = ? ORDER BY timestamp DESC",
+        "SELECT * FROM viva_sessions WHERE subject_slug = ? AND status = 'completed' ORDER BY timestamp DESC",
         (subject_slug,)
     ).fetchall()
     conn.close()
@@ -170,7 +289,7 @@ def get_all_sessions_for_faculty_subjects(subject_slugs):
     placeholders = ",".join("?" * len(subject_slugs))
     conn = get_db()
     rows = conn.execute(
-        f"SELECT * FROM viva_sessions WHERE subject_slug IN ({placeholders}) ORDER BY timestamp DESC",
+        f"SELECT * FROM viva_sessions WHERE subject_slug IN ({placeholders}) AND status = 'completed' ORDER BY timestamp DESC",
         subject_slugs
     ).fetchall()
     conn.close()
@@ -182,7 +301,7 @@ def get_analytics_for_subject(subject_slug):
     conn = get_db()
 
     sessions = conn.execute(
-        "SELECT * FROM viva_sessions WHERE subject_slug = ?", (subject_slug,)
+        "SELECT * FROM viva_sessions WHERE subject_slug = ? AND status = 'completed'", (subject_slug,)
     ).fetchall()
 
     if not sessions:
@@ -242,7 +361,7 @@ def get_analytics_for_subject(subject_slug):
         WHERE vs.subject_slug = ?
         GROUP BY sa.question
         ORDER BY times_asked DESC
-    """).fetchall()
+    """, (subject_slug,)).fetchall()
 
     question_stats = []
     for q in question_rows:
@@ -283,7 +402,7 @@ def get_student_history(student_name, roll_no):
     rows = conn.execute("""
         SELECT id, subject, subject_slug, timestamp, total_score, max_marks, grade, passed
         FROM viva_sessions
-        WHERE student_name = ? AND roll_no = ?
+        WHERE student_name = ? AND roll_no = ? AND status = 'completed'
         ORDER BY timestamp ASC
     """, (student_name, roll_no)).fetchall()
     conn.close()
@@ -296,7 +415,7 @@ def get_gradebook_data(subject_slug):
     rows = conn.execute("""
         SELECT student_name, roll_no, timestamp, total_score, max_marks, grade, passed
         FROM viva_sessions
-        WHERE subject_slug = ?
+        WHERE subject_slug = ? AND status = 'completed'
         ORDER BY timestamp DESC
     """, (subject_slug,)).fetchall()
     conn.close()
