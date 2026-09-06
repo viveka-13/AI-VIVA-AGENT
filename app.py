@@ -5,6 +5,7 @@ from merge_answers import combine_responses
 from flask import jsonify
 from report_generator import generate_report
 import database
+import feedback_generator
 from flask import send_file
 import gradebook_exporter
 import integrity_logger
@@ -201,25 +202,48 @@ def submit():
     combine_responses()
     subprocess.run([sys.executable, os.path.join("llm_check.py")], check=True)
     
-    # Parse output.txt to get verdicts
-    verdicts = []
-    if os.path.exists("output.txt"):
-        with open("output.txt", "r", encoding="utf-8") as f:
-            for line in f:
-                if '.' in line:
-                    _, result = line.split('.', 1)
-                    verdicts.append(result.strip())
-    
-    # Combine into answers_data
+    # Parse output_structured.json to get verdicts and concepts
     answers_data = []
-    for i, resp in enumerate(responses):
-        v = verdicts[i] if i < len(verdicts) else "incorrect"
-        answers_data.append({
-            "question": resp["question"],
-            "student_answer": resp["user_answer"],
-            "correct_answer": "", # not provided by this pipeline currently
-            "raw_verdict": v
-        })
+    all_missing_concepts = []
+    
+    if os.path.exists("output_structured.json"):
+        try:
+            with open("output_structured.json", "r", encoding="utf-8") as f:
+                structured_results = json.load(f)
+                
+            for res in structured_results:
+                answers_data.append({
+                    "question_number": res.get("question_number", 0),
+                    "question": res.get("question", ""),
+                    "student_answer": res.get("user_answer", ""),
+                    "correct_answer": res.get("correct_answer", ""),
+                    "raw_verdict": res.get("verdict", "incorrect"),
+                    "matched_concepts": res.get("matched_concepts", []),
+                    "missing_concepts": res.get("missing_concepts", []),
+                    "reasoning": res.get("reasoning", "")
+                })
+                all_missing_concepts.append(res.get("missing_concepts", []))
+        except Exception as e:
+            print(f"[APP] Error parsing structured output: {e}")
+            # Fallback to empty if parse fails completely
+            pass
+            
+    # Fallback if file missing or parse failed
+    if not answers_data:
+        for i, resp in enumerate(responses):
+            answers_data.append({
+                "question": resp["question"],
+                "student_answer": resp["user_answer"],
+                "correct_answer": "",
+                "raw_verdict": "incorrect",
+                "matched_concepts": [],
+                "missing_concepts": [],
+                "reasoning": "Failed to parse AI evaluation."
+            })
+            
+    # Generate Post-Session Feedback
+    feedback_summary = feedback_generator.generate_session_feedback(experiment, all_missing_concepts)
+
         
     total_score = sum(database._parse_verdict(ans["raw_verdict"])[1] for ans in answers_data)
     max_marks = len(answers_data) * 2
@@ -248,11 +272,11 @@ def submit():
     pending_id = request.form.get("session_id", None)
     if pending_id:
         session_id = int(pending_id)
-        database.finalize_session(session_id, answers_data, total_score, max_marks)
+        database.finalize_session(session_id, answers_data, total_score, max_marks, feedback_summary)
     else:
         session_id = database.save_viva_session(
             name, roll, experiment, slugify(experiment),
-            answers_data, total_score, max_marks
+            answers_data, total_score, max_marks, feedback_summary
         )
     
     # Run similarity check (non-blocking — if model not installed, just skips)
@@ -264,6 +288,10 @@ def submit():
 
     report = generate_report(name, roll, experiment, responses)
     report["session_id"] = session_id
+    
+    # Fetch full session data (answers + concepts + feedback)
+    full_session = database.get_session_by_id(session_id)
+    report["details"] = full_session
     
     # Also fetch history
     history = database.get_student_history(name, roll)

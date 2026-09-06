@@ -264,6 +264,29 @@
         }
 
         .section-block { margin-bottom: 32px; }
+
+        /* Explainable Eval Styles for Faculty */
+        .q-card {
+            background: #151515;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .q-title { color: #ccc; font-weight: 600; margin-bottom: 10px; font-size: 15px; }
+        .q-ans { color: #888; font-style: italic; margin-bottom: 15px; font-size: 14px; }
+        .q-verdict { font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 13px; }
+        .v-correct { color: #00ff88; }
+        .v-partial { color: #ffb800; }
+        .v-incorrect { color: #ff3366; }
+        .concept-row { margin-top: 15px; }
+        .concept-label { font-size: 12px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .concept-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .c-match { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.2); padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+        .c-miss { background: rgba(255, 51, 102, 0.1); color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.2); padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+        .q-reasoning { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #333; font-size: 13px; color: #aaa; }
+
     </style>
 </head>
 <body>
@@ -360,6 +383,59 @@
             {% endif %}
         </div>
 
+
+        <!-- EXPLAINABLE EVALUATION (ANSWERS) -->
+        <div class="section-block">
+            <div class="section-header">DETAILED EVALUATION & REASONING</div>
+            
+            {% if answers %}
+                {% for ans in answers %}
+                <div class="q-card">
+                    <div class="q-title">Q{{ ans.question_number }}: {{ ans.question }}</div>
+                    <div class="q-ans">Student: "{{ ans.student_answer }}"</div>
+                    <div class="q-ans" style="color:#555;">Reference: "{{ ans.correct_answer }}"</div>
+                    
+                    <div class="q-verdict 
+                        {% if 'incorrect' in ans.verdict|lower %}v-incorrect
+                        {% elif 'partially' in ans.verdict|lower %}v-partial
+                        {% else %}v-correct{% endif %}">
+                        VERDICT: {{ ans.verdict|upper }} ({{ ans.score }}/2 marks)
+                    </div>
+                    
+                    {% if ans.matched_concepts %}
+                    <div class="concept-row">
+                        <div class="concept-label">Matched Concepts:</div>
+                        <div class="concept-tags">
+                            {% for c in ans.matched_concepts %}
+                            <span class="c-match">{{ c }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if ans.missing_concepts %}
+                    <div class="concept-row">
+                        <div class="concept-label">Missing Concepts:</div>
+                        <div class="concept-tags">
+                            {% for c in ans.missing_concepts %}
+                            <span class="c-miss">{{ c }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if ans.reasoning %}
+                    <div class="q-reasoning">
+                        <strong style="color:#00f2ff;">AI Reasoning:</strong> {{ ans.reasoning }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">No answers available for this session.</div>
+            {% endif %}
+        </div>
+        
         <!-- PROCTORING TIMELINE -->
         <div class="section-block">
             <div class="section-header">PROCTORING TIMELINE</div>

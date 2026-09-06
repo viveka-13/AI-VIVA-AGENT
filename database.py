@@ -97,6 +97,24 @@ def init_db():
         );
     """)
 
+
+    try:
+        cursor.execute("ALTER TABLE session_answers ADD COLUMN matched_concepts TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE session_answers ADD COLUMN missing_concepts TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE session_answers ADD COLUMN reasoning TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE viva_sessions ADD COLUMN feedback_summary TEXT")
+    except sqlite3.OperationalError:
+        pass
+    
     conn.commit()
     conn.close()
 
@@ -151,28 +169,32 @@ def create_pending_session(student_name, roll_no, subject, subject_slug):
     return session_id
 
 
-def finalize_session(session_id, answers_data, total_score, max_marks):
+def finalize_session(session_id, answers_data, total_score, max_marks, feedback_summary=None):
     """Finalize a pending session with scores and answers after submission."""
     grade, passed = _compute_grade(total_score, max_marks)
+    feedback_str = json.dumps(feedback_summary) if feedback_summary else None
     conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE viva_sessions
         SET total_score = ?, max_marks = ?, grade = ?, passed = ?, status = 'completed',
-            timestamp = ?
+            timestamp = ?, feedback_summary = ?
         WHERE id = ?
-    """, (total_score, max_marks, grade, int(passed), datetime.now().isoformat(), session_id))
+    """, (total_score, max_marks, grade, int(passed), datetime.now().isoformat(), feedback_str, session_id))
 
     for i, ans in enumerate(answers_data):
         verdict, score = _parse_verdict(ans.get("raw_verdict", "incorrect"))
+        matched = json.dumps(ans.get("matched_concepts", []))
+        missing = json.dumps(ans.get("missing_concepts", []))
+        reasoning = ans.get("reasoning", "")
         cursor.execute("""
             INSERT INTO session_answers
                 (session_id, question_number, question, student_answer,
-                 correct_answer, verdict, score)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                 correct_answer, verdict, score, matched_concepts, missing_concepts, reasoning)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (session_id, i + 1, ans["question"], ans.get("student_answer", ""),
-              ans.get("correct_answer", ""), verdict, score))
+              ans.get("correct_answer", ""), verdict, score, matched, missing, reasoning))
 
     conn.commit()
     conn.close()
@@ -180,12 +202,13 @@ def finalize_session(session_id, answers_data, total_score, max_marks):
 
 
 def save_viva_session(student_name, roll_no, subject, subject_slug,
-                      answers_data, total_score, max_marks):
+                      answers_data, total_score, max_marks, feedback_summary=None):
     """
     Persist a completed viva session with all per-question answers.
     """
     grade, passed = _compute_grade(total_score, max_marks)
     timestamp = datetime.now().isoformat()
+    feedback_str = json.dumps(feedback_summary) if feedback_summary else None
 
     conn = get_db()
     cursor = conn.cursor()
@@ -193,22 +216,25 @@ def save_viva_session(student_name, roll_no, subject, subject_slug,
     cursor.execute("""
         INSERT INTO viva_sessions
             (student_name, roll_no, subject, subject_slug, timestamp,
-             total_score, max_marks, grade, passed, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed')
+             total_score, max_marks, grade, passed, status, feedback_summary)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?)
     """, (student_name, roll_no, subject, subject_slug, timestamp,
-          total_score, max_marks, grade, int(passed)))
+          total_score, max_marks, grade, int(passed), feedback_str))
 
     session_id = cursor.lastrowid
 
     for i, ans in enumerate(answers_data):
         verdict, score = _parse_verdict(ans.get("raw_verdict", "incorrect"))
+        matched = json.dumps(ans.get("matched_concepts", []))
+        missing = json.dumps(ans.get("missing_concepts", []))
+        reasoning = ans.get("reasoning", "")
         cursor.execute("""
             INSERT INTO session_answers
                 (session_id, question_number, question, student_answer,
-                 correct_answer, verdict, score)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                 correct_answer, verdict, score, matched_concepts, missing_concepts, reasoning)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (session_id, i + 1, ans["question"], ans.get("student_answer", ""),
-              ans.get("correct_answer", ""), verdict, score))
+              ans.get("correct_answer", ""), verdict, score, matched, missing, reasoning))
 
     conn.commit()
     conn.close()
@@ -275,16 +301,46 @@ def get_session_by_id(session_id):
         conn.close()
         return None
 
-    answers = conn.execute(
+    answers_raw = conn.execute(
         "SELECT * FROM session_answers WHERE session_id = ? ORDER BY question_number",
         (session_id,)
     ).fetchall()
+
+    answers = []
+    # Group answers
+    for row in answers_raw:
+        try:
+            matched = json.loads(row["matched_concepts"]) if row["matched_concepts"] else []
+        except:
+            matched = []
+        try:
+            missing = json.loads(row["missing_concepts"]) if row["missing_concepts"] else []
+        except:
+            missing = []
+            
+        answers.append({
+            "question_number": row["question_number"],
+            "question": row["question"],
+            "student_answer": row["student_answer"],
+            "correct_answer": row["correct_answer"],
+            "verdict": row["verdict"],
+            "score": row["score"],
+            "matched_concepts": matched,
+            "missing_concepts": missing,
+            "reasoning": row["reasoning"] or ""
+        })
+
+    try:
+        feedback = json.loads(session_row["feedback_summary"]) if session_row["feedback_summary"] else None
+    except:
+        feedback = None
 
     conn.close()
 
     return {
         "session": dict(session_row),
-        "answers": [dict(a) for a in answers]
+        "answers": answers,
+        "feedback": feedback
     }
 
 

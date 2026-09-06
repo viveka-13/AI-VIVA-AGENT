@@ -141,7 +141,62 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-    </style>
+    
+        /* Explainable Eval Styles */
+        .feedback-panel {
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px auto;
+            max-width: 800px;
+            text-align: left;
+        }
+        .feedback-title {
+            color: #00f2ff;
+            font-family: 'Orbitron', sans-serif;
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        .weak-areas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .area-tag {
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .q-card {
+            background: #151515;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            text-align: left;
+        }
+        .q-title { color: #ccc; font-weight: 600; margin-bottom: 10px; font-size: 15px; }
+        .q-ans { color: #888; font-style: italic; margin-bottom: 15px; font-size: 14px; }
+        .q-verdict { font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 13px; }
+        .v-correct { color: #00ff88; }
+        .v-partial { color: #ffb800; }
+        .v-incorrect { color: #ff3366; }
+        .concept-row { margin-top: 15px; }
+        .concept-label { font-size: 12px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .concept-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .c-match { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.2); padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+        .c-miss { background: rgba(255, 51, 102, 0.1); color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.2); padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+        .q-reasoning { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #333; font-size: 13px; color: #aaa; }
+</style>
 </head>
 <body>
     <div class="report-box">
@@ -159,6 +214,74 @@
             </button>
         </form>
     </div>
+
+    <!-- POST-SESSION FEEDBACK -->
+    {% if report.details and report.details.feedback %}
+    <div class="feedback-panel">
+        <h3 class="feedback-title">💡 Study Recommendations</h3>
+        
+        <div class="concept-label" style="margin-top: 15px;">Weakest Topics:</div>
+        <div class="weak-areas">
+            {% for area in report.details.feedback.weak_areas %}
+                <span class="area-tag">{{ area }}</span>
+            {% endfor %}
+            {% if not report.details.feedback.weak_areas %}
+                <span style="color:#888; font-size:13px; font-style:italic;">None identified!</span>
+            {% endif %}
+        </div>
+        
+        <p style="color: #ddd; font-size: 14px; line-height: 1.5; margin-bottom: 10px;">{{ report.details.feedback.explanation }}</p>
+        <p style="color: #00f2ff; font-size: 14px; line-height: 1.5; font-style: italic;">"{{ report.details.feedback.study_recommendations }}"</p>
+    </div>
+    {% endif %}
+
+    <!-- DETAILED EVALUATION -->
+    {% if report.details and report.details.answers %}
+    <div style="max-width: 800px; margin: 40px auto;">
+        <h3 style="color:#00f2ff; font-family:'Orbitron', sans-serif; text-align:center; margin-bottom: 20px;">Detailed Evaluation</h3>
+        {% for ans in report.details.answers %}
+        <div class="q-card">
+            <div class="q-title">Q{{ ans.question_number }}: {{ ans.question }}</div>
+            <div class="q-ans">"{{ ans.student_answer }}"</div>
+            
+            <div class="q-verdict 
+                {% if 'incorrect' in ans.verdict|lower %}v-incorrect
+                {% elif 'partially' in ans.verdict|lower %}v-partial
+                {% else %}v-correct{% endif %}">
+                VERDICT: {{ ans.verdict|upper }} ({{ ans.score }}/2 marks)
+            </div>
+            
+            {% if ans.matched_concepts %}
+            <div class="concept-row">
+                <div class="concept-label">Matched Concepts:</div>
+                <div class="concept-tags">
+                    {% for c in ans.matched_concepts %}
+                    <span class="c-match">{{ c }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if ans.missing_concepts %}
+            <div class="concept-row">
+                <div class="concept-label">Missing Concepts:</div>
+                <div class="concept-tags">
+                    {% for c in ans.missing_concepts %}
+                    <span class="c-miss">{{ c }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if ans.reasoning %}
+            <div class="q-reasoning">
+                <strong>AI Reasoning:</strong> {{ ans.reasoning }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- HISTORY CHART -->
     {% if report.history and report.history|length > 1 %}
