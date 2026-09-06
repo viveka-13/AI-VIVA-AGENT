@@ -29,11 +29,22 @@ def generate_questions(experiment_number, filepath="questions.json", num_questio
         with open(subject_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        import database
+        recent_seqs = database.get_recent_assigned_sequences(slug)
+        recent_ids = [ [q["question"] if isinstance(q, dict) else q for q in seq] for seq in recent_seqs ]
+        
         if len(data) < num_questions:
-            # If the bank has fewer questions than needed, use all of them
             selected = data
         else:
-            selected = random.sample(data, num_questions)
+            selected = None
+            for _ in range(10):
+                samp = random.sample(data, num_questions)
+                samp_qs = [q["question"] for q in samp]
+                if samp_qs not in recent_ids:
+                    selected = samp
+                    break
+            if not selected:
+                selected = random.sample(data, num_questions)
 
         question_payload = {
             "experiment_name": str(experiment_number),

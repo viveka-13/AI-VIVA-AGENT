@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Faculty Schedule & Pooling</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #e2e8f0; }
+        .container { max-width: 800px; margin: 40px auto; padding: 20px; background: #121212; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #00f2ff; }
+        h2 { color: #00f2ff; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #acfbff; }
+        input, select { width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #2d3748; color: #fff; border-radius: 6px; }
+        button { width: 100%; padding: 12px; background: #00f2ff; color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #00c8d4; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px; border: 1px solid #2d3748; text-align: left; }
+        .table th { background: #1e1e1e; color: #00f2ff; }
+        a.back { display: block; margin-bottom: 20px; color: #00f2ff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a class="back" href="{{ url_for('faculty_dashboard') }}">&larr; Back to Dashboard</a>
+        <h2>Configure Exam Schedules</h2>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label>Subject</label>
+                <select name="subject_slug" required>
+                    {% for sub in subjects %}
+                    <option value="{{ sub | replace(' ', '_') | lower | replace('[^a-z0-9_]', '') }}">{{ sub }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Start Window (YYYY-MM-DDTHH:MM)</label>
+                <input type="datetime-local" name="start_time" required>
+            </div>
+            <div class="form-group">
+                <label>End Window (YYYY-MM-DDTHH:MM)</label>
+                <input type="datetime-local" name="end_time" required>
+            </div>
+            <div class="form-group">
+                <label>Time Limit per Student (minutes)</label>
+                <input type="number" name="time_limit" value="20" required>
+            </div>
+            <div class="form-group">
+                <label>Question Pool Size (Multiplier)</label>
+                <input type="number" name="pool_size" value="30" required>
+            </div>
+            <button type="submit">Save Configuration</button>
+        </form>
+
+        <h3 style="margin-top:40px; color: #acfbff;">Current Schedules</h3>
+        <table class="table">
+            <tr>
+                <th>Subject</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Time Limit (m)</th>
+                <th>Pool Size</th>
+            </tr>
+            {% for sub, sched in schedules.items() %}
+            {% if sched %}
+            <tr>
+                <td>{{ sub }}</td>
+                <td>{{ sched.start_time }}</td>
+                <td>{{ sched.end_time }}</td>
+                <td>{{ sched.time_limit }}</td>
+                <td>{{ sched.pool_size }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

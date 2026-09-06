@@ -78,6 +78,23 @@ def init_db():
             details         TEXT NOT NULL DEFAULT '',
             FOREIGN KEY (session_id) REFERENCES viva_sessions(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS exam_schedules (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            subject_slug    TEXT NOT NULL UNIQUE,
+            start_time      TEXT NOT NULL,
+            end_time        TEXT NOT NULL,
+            time_limit      INTEGER NOT NULL DEFAULT 20,
+            pool_size       INTEGER NOT NULL DEFAULT 30
+        );
+
+        CREATE TABLE IF NOT EXISTS assigned_questions (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id      INTEGER NOT NULL,
+            question_number INTEGER NOT NULL,
+            question        TEXT NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES viva_sessions(id) ON DELETE CASCADE
+        );
     """)
 
     conn.commit()
@@ -420,3 +437,59 @@ def get_gradebook_data(subject_slug):
     """, (subject_slug,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+def get_exam_schedule(subject_slug):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM exam_schedules WHERE subject_slug = ?", (subject_slug,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def save_exam_schedule(subject_slug, start_time, end_time, time_limit, pool_size):
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO exam_schedules (subject_slug, start_time, end_time, time_limit, pool_size)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(subject_slug) DO UPDATE SET
+            start_time=excluded.start_time,
+            end_time=excluded.end_time,
+            time_limit=excluded.time_limit,
+            pool_size=excluded.pool_size
+    """, (subject_slug, start_time, end_time, time_limit, pool_size))
+    conn.commit()
+    conn.close()
+
+def save_assigned_questions(session_id, questions):
+    conn = get_db()
+    for q in questions:
+        conn.execute("""
+            INSERT INTO assigned_questions (session_id, question_number, question)
+            VALUES (?, ?, ?)
+        """, (session_id, q["question_number"], q["question"]))
+    conn.commit()
+    conn.close()
+
+def get_assigned_questions(session_id):
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM assigned_questions WHERE session_id = ? ORDER BY question_number", (session_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_recent_assigned_sequences(subject_slug, limit=50):
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT aq.session_id, aq.question_number, aq.question
+        FROM assigned_questions aq
+        JOIN viva_sessions vs ON aq.session_id = vs.id
+        WHERE vs.subject_slug = ?
+        ORDER BY aq.session_id DESC
+    """, (subject_slug,)).fetchall()
+    conn.close()
+    
+    sequences = {}
+    for r in rows:
+        sid = r["session_id"]
+        if sid not in sequences:
+            sequences[sid] = []
+        sequences[sid].append(r["question"])
+    return list(sequences.values())[:limit]

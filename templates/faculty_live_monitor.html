@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #e2e8f0; }
+        .container { max-width: 1000px; margin: 40px auto; padding: 20px; background: #121212; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #00f2ff; }
+        h2 { color: #00f2ff; text-align: center; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px; border: 1px solid #2d3748; text-align: left; }
+        .table th { background: #1e1e1e; color: #00f2ff; }
+        .status-active { color: #2ed573; font-weight: bold; }
+        a.back { display: block; margin-bottom: 20px; color: #00f2ff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a class="back" href="{{ url_for('faculty_dashboard') }}">&larr; Back to Dashboard</a>
+        <h2>Live Viva Monitor</h2>
+        
+        <table class="table" id="monitor-table">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Roll No</th>
+                    <th>Subject</th>
+                    <th>Time Limit</th>
+                    <th>Current Question</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Populated via SocketIO -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const socket = io();
+        const subjects = {{ subjects | tojson }};
+        
+        socket.on('connect', () => {
+            subjects.forEach(sub => {
+                let slug = sub.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                socket.emit('join_subject_room', { subject_slug: slug });
+            });
+        });
+
+        const activeSessions = {};
+        const tbody = document.querySelector('#monitor-table tbody');
+
+        function renderTable() {
+            tbody.innerHTML = '';
+            for (let key in activeSessions) {
+                let s = activeSessions[key];
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${s.roll}</td>
+                        <td>${s.subject}</td>
+                        <td>${s.time_limit} m</td>
+                        <td>${s.current_question || '1 (Started)'}</td>
+                        <td class="status-active">Active</td>
+                    </tr>
+                `;
+            }
+        }
+
+        socket.on('session_started', (data) => {
+            let key = data.roll + "_" + data.subject;
+            activeSessions[key] = { ...data, current_question: 1 };
+            renderTable();
+        });
+
+        socket.on('progress_update', (data) => {
+            let key = data.roll + "_" + data.name; // Inconsistent key in progress event? 
+            // Wait, let's just match by roll
+            let sessionKey = Object.keys(activeSessions).find(k => k.startsWith(data.roll + "_"));
+            if (sessionKey) {
+                activeSessions[sessionKey].current_question = data.question_number;
+                renderTable();
+            }
+        });
+
+        socket.on('session_ended', (data) => {
+            let key = data.roll + "_" + data.subject;
+            if (activeSessions[key]) {
+                delete activeSessions[key];
+                renderTable();
+            }
+        });
+    </script>
+</body>
+</html>

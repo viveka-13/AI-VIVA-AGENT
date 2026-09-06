@@ -297,11 +297,19 @@
             }
         }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
+
 
 <body>
     <div class="quiz-container">
-        <h2>Answer the following questions</h2>
+        
+        <div id="timer-container" style="text-align: center; margin-bottom: 20px; font-size: 24px; font-weight: bold; color: #ff4757;">
+            Time Remaining: <span id="time-display">--:--</span>
+        </div>
+        <h2>
+Answer the following questions</h2>
         <form id="vivaForm" method="POST" action="/submit">
             {% for i in range(10) %}
             <div class="question-block">
@@ -591,5 +599,67 @@
     })();
     </script>
 
+
+    <script>
+        // --- Socket.IO Progress Tracking ---
+        const socket = io();
+        const subjectSlug = "{{ experiment }}".toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        const sessionName = "{{ name }}";
+        const sessionRoll = "{{ roll }}";
+        
+        let typingTimer;
+        const textareas = document.querySelectorAll('textarea');
+        
+        textareas.forEach((textarea, index) => {
+            textarea.addEventListener('input', () => {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    socket.emit('student_progress', {
+                        subject_slug: subjectSlug,
+                        name: sessionName,
+                        roll: sessionRoll,
+                        question_number: index + 1
+                    });
+                }, 1000); // Debounce 1 second
+            });
+            
+            textarea.addEventListener('focus', () => {
+                socket.emit('student_progress', {
+                    subject_slug: subjectSlug,
+                    name: sessionName,
+                    roll: sessionRoll,
+                    question_number: index + 1
+                });
+            });
+        });
+
+        // --- Countdown Timer ---
+        // timeLimit comes from session in minutes. Default 20.
+        let timeLimitMins = parseInt("{{ session.time_limit | default(20) }}");
+        let timeLeft = timeLimitMins * 60; 
+        
+        const display = document.getElementById('time-display');
+        const form = document.querySelector('form'); // Assume the main form
+        
+        function updateTimer() {
+            let m = Math.floor(timeLeft / 60);
+            let s = timeLeft % 60;
+            display.innerText = (m < 10 ? '0' : '') + m + ":" + (s < 10 ? '0' : '') + s;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                display.innerText = "00:00";
+                // Lock form and submit
+                textareas.forEach(t => t.readOnly = true);
+                if (form) form.submit();
+            } else {
+                timeLeft--;
+            }
+        }
+        
+        updateTimer();
+        const timerInterval = setInterval(updateTimer, 1000);
+    </script>
 </body>
+
 </html>

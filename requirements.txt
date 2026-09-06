@@ -38,3 +38,4 @@ openpyxl
 SQLAlchemy
 
 sentence-transformers
+Flask-SocketIO==5.3.6
