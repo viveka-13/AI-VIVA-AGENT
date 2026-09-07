@@ -51,8 +51,11 @@ def get_event_summary(session_id):
         "face_lost_total_seconds": 0.0,
         "tab_switch_count": 0,
         "tab_switch_total_seconds": 0.0,
+        "clipboard_attempt_count": 0,
         "events": events
     }
+
+    clipboard_types = ("copy_attempt", "cut_attempt", "paste_attempt", "context_menu_attempt")
 
     for e in events:
         if e["event_type"] == "face_lost":
@@ -61,5 +64,8 @@ def get_event_summary(session_id):
         elif e["event_type"] in ("tab_switch", "focus_loss"):
             summary["tab_switch_count"] += 1
             summary["tab_switch_total_seconds"] += e.get("duration_seconds", 0)
+        elif e["event_type"] in clipboard_types:
+            summary["clipboard_attempt_count"] += 1
 
     return summary
+

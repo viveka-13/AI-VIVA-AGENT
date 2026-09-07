@@ -326,6 +326,22 @@ Answer the following questions</h2>
             <input type="hidden" name="session_id" value="{{ session_id }}">
             <button type="submit">Submit</button>
         </form>
+
+        <!-- Copy-paste disabled notice (cyber-aesthetic) -->
+        <div id="clipboard-notice" style="
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: rgba(255, 170, 0, 0.08);
+            border: 1px solid rgba(255, 170, 0, 0.25);
+            border-radius: 8px;
+            font-size: 11px;
+            color: #ffaa00;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        ">
+            &#9888; Copy-paste is disabled during this test and attempts are logged.
+        </div>
     </div>
 
     <div id="loadingOverlay" class="loading-overlay">
@@ -659,6 +675,83 @@ Answer the following questions</h2>
         
         updateTimer();
         const timerInterval = setInterval(updateTimer, 1000);
+    </script>
+
+    <!-- ============================================================
+         COPY-PASTE / CLIPBOARD RESTRICTION (DETERRENT ONLY)
+         ============================================================
+         This is a deterrent measure only, not a guaranteed prevention.
+         A student can still bypass it via browser developer tools
+         (disabling JS, intercepting events) or OS-level clipboard /
+         screenshot tools outside the browser's control.
+         All blocked attempts are logged as integrity events for
+         faculty review — they are signals, not proof of misconduct.
+         ============================================================ -->
+    <script>
+    (function() {
+        const SESSION_ID = '{{ session_id }}';
+        if (!SESSION_ID || SESSION_ID === 'None') return;
+
+        const API_URL = '/api/session/' + SESSION_ID + '/integrity-event';
+        const container = document.querySelector('.quiz-container');
+        if (!container) return;
+
+        // Detect which question the student is currently on
+        function getCurrentQuestion() {
+            const focused = document.activeElement;
+            if (focused && focused.id && focused.id.startsWith('answer_')) {
+                return parseInt(focused.id.replace('answer_', ''), 10) + 1;
+            }
+            return null;
+        }
+
+        // Send a clipboard integrity event to the backend
+        function logClipboardEvent(eventType) {
+            const qNum = getCurrentQuestion();
+            const details = eventType.replace('_', ' ') + ' detected'
+                + (qNum ? ' on question ' + qNum : '');
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: eventType,
+                    timestamp: new Date().toISOString(),
+                    duration_seconds: 0,
+                    details: details
+                })
+            }).catch(function() {});
+        }
+
+        // Block copy, cut, paste events on the quiz container
+        ['copy', 'cut', 'paste'].forEach(function(evtName) {
+            container.addEventListener(evtName, function(e) {
+                e.preventDefault();
+                logClipboardEvent(evtName + '_attempt');
+            });
+        });
+
+        // Block right-click context menu on the quiz container
+        container.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            logClipboardEvent('context_menu_attempt');
+        });
+
+        // Block Ctrl+C / Ctrl+V / Ctrl+X (and Cmd on Mac) on the quiz container
+        container.addEventListener('keydown', function(e) {
+            const mod = e.ctrlKey || e.metaKey; // metaKey = Cmd on Mac
+            if (mod && (e.key === 'c' || e.key === 'C')) {
+                e.preventDefault();
+                logClipboardEvent('copy_attempt');
+            } else if (mod && (e.key === 'v' || e.key === 'V')) {
+                e.preventDefault();
+                logClipboardEvent('paste_attempt');
+            } else if (mod && (e.key === 'x' || e.key === 'X')) {
+                e.preventDefault();
+                logClipboardEvent('cut_attempt');
+            }
+            // Ctrl+A (select-all) is intentionally NOT blocked
+        });
+    })();
     </script>
 </body>
 
