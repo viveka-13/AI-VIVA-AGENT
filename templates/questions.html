@@ -327,7 +327,7 @@ Answer the following questions</h2>
             <button type="submit">Submit</button>
         </form>
 
-        <!-- Copy-paste disabled notice (cyber-aesthetic) -->
+        <!-- Integrity disabled notice (cyber-aesthetic) -->
         <div id="clipboard-notice" style="
             margin-top: 20px;
             padding: 8px 16px;
@@ -340,7 +340,7 @@ Answer the following questions</h2>
             position: relative;
             z-index: 1;
         ">
-            &#9888; Copy-paste is disabled during this test and attempts are logged.
+            &#9888; Tab/window activity is monitored during this test. Copy-paste is disabled and attempts are logged.
         </div>
     </div>
 
@@ -507,12 +507,22 @@ Answer the following questions</h2>
         // ========== TAB SWITCH DETECTION ==========
         let tabHiddenAt = null;
 
+        function getActiveQuestion() {
+            const focused = document.activeElement;
+            if (focused && focused.id && focused.id.startsWith('answer_')) {
+                return parseInt(focused.id.replace('answer_', ''), 10) + 1;
+            }
+            return null;
+        }
+
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 tabHiddenAt = new Date();
             } else if (tabHiddenAt) {
                 const duration = (new Date() - tabHiddenAt) / 1000;
                 tabHiddenAt = null;
+                const qNum = getActiveQuestion();
+                const qText = qNum ? ' (while on Q' + qNum + ')' : '';
                 fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -520,7 +530,7 @@ Answer the following questions</h2>
                         event_type: 'tab_switch',
                         timestamp: new Date().toISOString(),
                         duration_seconds: Math.round(duration * 10) / 10,
-                        details: 'Student switched away from viva tab for ' + duration.toFixed(1) + 's'
+                        details: 'Student switched away from viva tab for ' + duration.toFixed(1) + 's' + qText
                     })
                 }).catch(function() {});
             }
@@ -534,6 +544,8 @@ Answer the following questions</h2>
                 const duration = (new Date() - tabHiddenAt) / 1000;
                 tabHiddenAt = null;
                 if (duration > 1) {
+                    const qNum = getActiveQuestion();
+                    const qText = qNum ? ' (while on Q' + qNum + ')' : '';
                     fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -541,7 +553,7 @@ Answer the following questions</h2>
                             event_type: 'focus_loss',
                             timestamp: new Date().toISOString(),
                             duration_seconds: Math.round(duration * 10) / 10,
-                            details: 'Window lost focus for ' + duration.toFixed(1) + 's'
+                            details: 'Window lost focus for ' + duration.toFixed(1) + 's' + qText
                         })
                     }).catch(function() {});
                 }
