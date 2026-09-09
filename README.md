@@ -6,9 +6,10 @@ An AI-powered academic platform that automates the oral examination (viva) proce
 
 *   **Student Portal**: Students enter their details, select a subject, and answer automatically generated questions. Features Text-To-Speech (TTS) voice announcements and a sleek cyber-aesthetic UI.
 *   **Interactive Voice Dictation**: Students can use their browser's microphone to dictate answers. After recording, the system locks the answer and realistically reads the question and captured answer back out loud.
+*   **Academic Integrity**: Comprehensive proctoring including WebCam face detection, Tab/Window Switch tracking, and Copy-Paste/Right-Click blocking. All events are tracked with timestamps and durations without automatically failing the student, and sent to the faculty portal for human review.
 *   **Faculty Portal**: Instructors can register, manage subjects, and upload study materials (`.pdf`, `.pptx`, `.docx`, `.txt`).
 *   **AI Question Generation**: Automatically extracts text from uploaded materials and generates Q&A pairs using local **Ollama** LLM processing (no external API keys required).
-*   **AI Answer Evaluation**: The system evaluates student answers using local LLM inference to determine if they are Correct, Partially Correct, or Incorrect, then generates a final grade report.
+*   **AI Answer Evaluation & Explainability**: The system evaluates student answers using local LLM inference to determine the verdict (Correct, Partially Correct, Incorrect). It also provides a **Detailed Evaluation** mapping the student's answer to expected "Matched Concepts" and "Missing Concepts", along with AI reasoning and aggregated study recommendations.
 
 ## 🛠️ Prerequisites
 
@@ -39,7 +40,7 @@ An AI-powered academic platform that automates the oral examination (viva) proce
     *   Student Portal: `http://127.0.0.1:5000/`
     *   Faculty Portal: `http://127.0.0.1:5000/faculty`
 
-## 📁 Project Structure
+## 📂 Project Structure
 
 *   `app.py`: Main Flask application router.
 *   `Laptop2.py`: Orchestrates loading and serving the questions.
@@ -49,7 +50,7 @@ An AI-powered academic platform that automates the oral examination (viva) proce
 *   `templates/`: HTML templates for the UI.
 *   `faculty_data/`: Automatically generated folder where uploaded materials and subject questions are locally stored.
 
-## 📝 License
+## 📜 License
 This project is open-source and available under the MIT License.
 
 
