@@ -630,6 +630,89 @@ def log_integrity_event(session_id):
     return jsonify({"status": "ok"})
 
 
+# ==========================================
+# SCREEN RECORDING
+# ==========================================
+
+RECORDINGS_DIR = os.path.join(FACULTY_DATA_DIR, "recordings")
+os.makedirs(RECORDINGS_DIR, exist_ok=True)
+
+
+@app.route("/api/session/<int:session_id>/video-chunk", methods=["POST"])
+def upload_video_chunk(session_id):
+    """Receive a screen recording chunk from the browser MediaRecorder."""
+    chunk_dir = os.path.join(RECORDINGS_DIR, str(session_id))
+    os.makedirs(chunk_dir, exist_ok=True)
+
+    stream_type = request.args.get("type", "screen")
+    chunk_data = request.get_data()
+
+    if not chunk_data:
+        return jsonify({"error": "Empty chunk"}), 400
+
+    # Find next chunk number
+    existing = [f for f in os.listdir(chunk_dir) if f.startswith(f"{stream_type}_chunk_")]
+    chunk_num = len(existing)
+    chunk_path = os.path.join(chunk_dir, f"{stream_type}_chunk_{chunk_num:04d}.webm")
+
+    with open(chunk_path, "wb") as f:
+        f.write(chunk_data)
+
+    return jsonify({"status": "ok", "chunk": chunk_num, "bytes": len(chunk_data)})
+
+
+@app.route("/api/session/<int:session_id>/finalize-recording", methods=["POST"])
+def finalize_recording(session_id):
+    """Concatenate all screen chunks into a single playable WebM file."""
+    chunk_dir = os.path.join(RECORDINGS_DIR, str(session_id))
+    if not os.path.isdir(chunk_dir):
+        return jsonify({"error": "No chunks found"}), 404
+
+    stream_type = request.args.get("type", "screen")
+    chunks = sorted([
+        f for f in os.listdir(chunk_dir)
+        if f.startswith(f"{stream_type}_chunk_")
+    ])
+
+    if not chunks:
+        return jsonify({"error": "No chunks to finalize"}), 404
+
+    final_path = os.path.join(chunk_dir, f"final_{stream_type}.webm")
+    with open(final_path, "wb") as out:
+        for chunk_name in chunks:
+            with open(os.path.join(chunk_dir, chunk_name), "rb") as c:
+                out.write(c.read())
+
+    # Clean up individual chunks to save space
+    for chunk_name in chunks:
+        try:
+            os.remove(os.path.join(chunk_dir, chunk_name))
+        except OSError:
+            pass
+
+    size_mb = os.path.getsize(final_path) / (1024 * 1024)
+    return jsonify({
+        "status": "ok",
+        "file": f"final_{stream_type}.webm",
+        "size_mb": round(size_mb, 2)
+    })
+
+
+@app.route("/faculty/session/<int:session_id>/recording", methods=["GET"])
+def faculty_session_recording(session_id):
+    """Stream the finalized screen recording for faculty playback."""
+    if not session.get("faculty_logged_in"):
+        return redirect(url_for("faculty_home"))
+
+    stream_type = request.args.get("type", "screen")
+    final_path = os.path.join(RECORDINGS_DIR, str(session_id), f"final_{stream_type}.webm")
+
+    if not os.path.exists(final_path):
+        return "Recording not found", 404
+
+    return send_file(final_path, mimetype="video/webm")
+
+
 @app.route("/faculty/session/<int:session_id>/integrity", methods=["GET"])
 def faculty_session_integrity(session_id):
     """Faculty view of integrity report for a specific session."""

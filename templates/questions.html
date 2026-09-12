@@ -303,6 +303,67 @@
 
 
 <body>
+    <!-- SCREEN SHARE GATE OVERLAY -->
+    <div id="screenShareGate" style="
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(10, 10, 10, 0.97); z-index: 10000;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; padding: 40px;
+    ">
+        <div style="max-width: 500px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🖥️</div>
+            <h2 style="color: #00f2ff; font-size: 24px; margin-bottom: 15px;">Screen Sharing Required</h2>
+            <p style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
+                Your screen will be recorded during this test as part of academic integrity monitoring.
+                This recording is for faculty review only — it is not an automatic penalty.
+            </p>
+            <button id="startShareBtn" onclick="requestScreenShare()" style="
+                padding: 14px 36px; background: linear-gradient(to right, #0077ff, #00f2ff);
+                color: #000; border: none; border-radius: 25px; font-size: 16px;
+                font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            ">Start Screen Share</button>
+            <p id="shareError" style="color: #ff6b6b; font-size: 13px; margin-top: 15px; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- SCREEN SHARE REVOKED OVERLAY -->
+    <div id="screenShareRevoked" style="
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(10, 10, 10, 0.95); z-index: 10001;
+        display: none; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; padding: 40px;
+    ">
+        <div style="max-width: 500px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+            <h2 style="color: #ff6b6b; font-size: 24px; margin-bottom: 15px;">Screen Share Stopped</h2>
+            <p style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+                Screen sharing was stopped. The test is paused until you re-share your screen.
+                This event has been logged for faculty review.
+            </p>
+            <p id="revokeTimer" style="color: #ffaa00; font-size: 13px; margin-bottom: 20px;"></p>
+            <button onclick="requestScreenShare()" style="
+                padding: 14px 36px; background: linear-gradient(to right, #0077ff, #00f2ff);
+                color: #000; border: none; border-radius: 25px; font-size: 16px;
+                font-weight: 600; cursor: pointer;
+            ">Re-share Screen</button>
+        </div>
+    </div>
+
+    <!-- RECORDING ACTIVE BADGE -->
+    <div id="recordingBadge" style="
+        position: fixed; top: 12px; left: 12px; z-index: 9999;
+        background: rgba(0, 200, 80, 0.15); border: 1px solid rgba(0, 200, 80, 0.4);
+        color: #00c850; padding: 6px 14px; border-radius: 20px;
+        font-size: 12px; font-weight: 600; display: none;
+        animation: fadeIn 0.3s ease;
+    ">
+        <span style="display: inline-block; width: 8px; height: 8px; background: #00c850; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite;"></span>
+        Screen sharing active
+    </div>
+    <style>
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+
     <div class="quiz-container">
         
         <div id="timer-container" style="text-align: center; margin-bottom: 20px; font-size: 24px; font-weight: bold; color: #ff4757;">
@@ -708,7 +769,6 @@ Answer the following questions</h2>
         const container = document.querySelector('.quiz-container');
         if (!container) return;
 
-        // Detect which question the student is currently on
         function getCurrentQuestion() {
             const focused = document.activeElement;
             if (focused && focused.id && focused.id.startsWith('answer_')) {
@@ -717,7 +777,6 @@ Answer the following questions</h2>
             return null;
         }
 
-        // Send a clipboard integrity event to the backend
         function logClipboardEvent(eventType) {
             const qNum = getCurrentQuestion();
             const details = eventType.replace('_', ' ') + ' detected'
@@ -734,7 +793,6 @@ Answer the following questions</h2>
             }).catch(function() {});
         }
 
-        // Block copy, cut, paste events on the quiz container
         ['copy', 'cut', 'paste'].forEach(function(evtName) {
             container.addEventListener(evtName, function(e) {
                 e.preventDefault();
@@ -742,15 +800,13 @@ Answer the following questions</h2>
             });
         });
 
-        // Block right-click context menu on the quiz container
         container.addEventListener('contextmenu', function(e) {
             e.preventDefault();
             logClipboardEvent('context_menu_attempt');
         });
 
-        // Block Ctrl+C / Ctrl+V / Ctrl+X (and Cmd on Mac) on the quiz container
         container.addEventListener('keydown', function(e) {
-            const mod = e.ctrlKey || e.metaKey; // metaKey = Cmd on Mac
+            const mod = e.ctrlKey || e.metaKey;
             if (mod && (e.key === 'c' || e.key === 'C')) {
                 e.preventDefault();
                 logClipboardEvent('copy_attempt');
@@ -761,8 +817,211 @@ Answer the following questions</h2>
                 e.preventDefault();
                 logClipboardEvent('cut_attempt');
             }
-            // Ctrl+A (select-all) is intentionally NOT blocked
         });
+    })();
+    </script>
+
+    <!-- ============================================================
+         SCREEN RECORDING (MONITORING ONLY — NOT AUTO-PENALTY)
+         ============================================================
+         Uses getDisplayMedia + MediaRecorder to capture the student's
+         screen during the test. Chunks are uploaded every 15 seconds.
+         If the student revokes sharing, the test is paused (not
+         auto-submitted) until they re-share. Faculty review the
+         recording afterward — no automatic penalties are applied.
+         ============================================================ -->
+    <script>
+    (function() {
+        const SESSION_ID = '{{ session_id }}';
+        if (!SESSION_ID || SESSION_ID === 'None') return;
+
+        const API_URL = '/api/session/' + SESSION_ID + '/integrity-event';
+        const CHUNK_URL = '/api/session/' + SESSION_ID + '/video-chunk?type=screen';
+        const FINALIZE_URL = '/api/session/' + SESSION_ID + '/finalize-recording?type=screen';
+
+        const gate = document.getElementById('screenShareGate');
+        const revokedOverlay = document.getElementById('screenShareRevoked');
+        const badge = document.getElementById('recordingBadge');
+        const shareError = document.getElementById('shareError');
+        const revokeTimerEl = document.getElementById('revokeTimer');
+
+        let mediaRecorder = null;
+        let screenStream = null;
+        let isRecording = false;
+        let chunkQueue = [];
+
+        function getActiveQ() {
+            const el = document.activeElement;
+            if (el && el.id && el.id.startsWith('answer_')) {
+                return parseInt(el.id.replace('answer_', ''), 10) + 1;
+            }
+            return null;
+        }
+
+        // Upload a chunk with retry logic (up to 3 attempts)
+        async function uploadChunk(blob, retries) {
+            retries = retries || 0;
+            try {
+                const resp = await fetch(CHUNK_URL, { method: 'POST', body: blob });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            } catch (err) {
+                if (retries < 3) {
+                    await new Promise(r => setTimeout(r, 1000 * (retries + 1)));
+                    return uploadChunk(blob, retries + 1);
+                }
+                console.error('[SCREEN] Chunk upload failed after 3 retries:', err);
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: 'recording_chunk_lost',
+                        timestamp: new Date().toISOString(),
+                        duration_seconds: 0,
+                        details: 'A screen recording chunk failed to upload after 3 retries'
+                    })
+                }).catch(function() {});
+            }
+        }
+
+        function startRecording(stream) {
+            screenStream = stream;
+            try {
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            } catch (e) {
+                mediaRecorder = new MediaRecorder(stream);
+            }
+
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data && e.data.size > 0) {
+                    uploadChunk(e.data);
+                }
+            };
+
+            mediaRecorder.start(15000); // 15-second timeslice
+            isRecording = true;
+            badge.style.display = 'inline-block';
+
+            // Listen for revocation (student clicks "Stop sharing")
+            stream.getVideoTracks()[0].addEventListener('ended', function() {
+                handleRevocation();
+            });
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            isRecording = false;
+            badge.style.display = 'none';
+            if (screenStream) {
+                screenStream.getTracks().forEach(function(t) { t.stop(); });
+            }
+        }
+
+        function handleRevocation() {
+            isRecording = false;
+            badge.style.display = 'none';
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            // Log integrity event
+            const qNum = getActiveQ();
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'screen_share_stopped',
+                    timestamp: new Date().toISOString(),
+                    duration_seconds: 0,
+                    details: 'Student stopped screen sharing' + (qNum ? ' while on Q' + qNum : '')
+                })
+            }).catch(function() {});
+
+            // Pause the test
+            document.querySelectorAll('textarea').forEach(function(ta) { ta.disabled = true; });
+            var submitBtn = document.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.style.display = 'none';
+
+            revokedOverlay.style.display = 'flex';
+
+            // Countdown display (informational, test stays paused indefinitely)
+            var elapsed = 0;
+            var countdownInterval = setInterval(function() {
+                elapsed++;
+                if (elapsed <= 60) {
+                    revokeTimerEl.textContent = 'Please re-share within ' + (60 - elapsed) + ' seconds.';
+                } else {
+                    revokeTimerEl.textContent = 'Test remains paused. Please re-share your screen to continue.';
+                }
+            }, 1000);
+
+            // Store interval so we can clear it on re-share
+            revokedOverlay.dataset.countdownId = countdownInterval;
+        }
+
+        // Global function called by both gate and revoked overlay buttons
+        window.requestScreenShare = async function() {
+            try {
+                var stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+
+                // If re-sharing (revoked overlay visible), log resume event
+                if (revokedOverlay.style.display === 'flex') {
+                    fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event_type: 'screen_share_resumed',
+                            timestamp: new Date().toISOString(),
+                            duration_seconds: 0,
+                            details: 'Student re-shared their screen'
+                        })
+                    }).catch(function() {});
+
+                    // Un-pause the test
+                    document.querySelectorAll('textarea').forEach(function(ta) { ta.disabled = false; });
+                    var submitBtn = document.querySelector('button[type="submit"]');
+                    if (submitBtn) submitBtn.style.display = '';
+
+                    var cid = revokedOverlay.dataset.countdownId;
+                    if (cid) clearInterval(parseInt(cid));
+
+                    revokedOverlay.style.display = 'none';
+                }
+
+                // Hide the initial gate
+                gate.style.display = 'none';
+
+                // Start a fresh MediaRecorder
+                startRecording(stream);
+
+            } catch (err) {
+                shareError.style.display = 'block';
+                shareError.textContent = 'Screen share denied or cancelled. You must share your screen to begin the test.';
+                console.log('[SCREEN] getDisplayMedia error:', err.message);
+            }
+        };
+
+        // Finalize recording before form submit
+        var vivaForm = document.getElementById('vivaForm');
+        if (vivaForm) {
+            vivaForm.addEventListener('submit', function(e) {
+                if (isRecording) {
+                    e.preventDefault();
+                    stopRecording();
+
+                    // Small delay to let final chunk upload, then finalize
+                    setTimeout(function() {
+                        fetch(FINALIZE_URL, { method: 'POST' })
+                            .then(function() { vivaForm.submit(); })
+                            .catch(function() { vivaForm.submit(); });
+                    }, 1000);
+                } else {
+                    // Not recording — just finalize whatever chunks exist
+                    fetch(FINALIZE_URL, { method: 'POST' }).catch(function() {});
+                }
+            });
+        }
     })();
     </script>
 </body>

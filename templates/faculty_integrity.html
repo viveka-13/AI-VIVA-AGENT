@@ -232,6 +232,8 @@
         }
         .event-face::before { background: #ff6b6b; }
         .event-tab::before { background: #ffaa00; }
+        .event-screen::before { background: #00f2ff; }
+        .event-clipboard::before { background: #cc33ff; }
 
         .event-header {
             display: flex;
@@ -346,6 +348,10 @@
                 <div class="label">Tab Switches</div>
             </div>
             <div class="mini-stat">
+                <div class="num {{ 'num-warn' if event_summary.screen_share_event_count > 0 else 'num-ok' }}">{{ event_summary.screen_share_event_count }}</div>
+                <div class="label">Screen Share Events</div>
+            </div>
+            <div class="mini-stat">
                 <div class="num num-ok">{{ event_summary.total_events }}</div>
                 <div class="label">Total Events</div>
             </div>
@@ -440,6 +446,21 @@
             {% endif %}
         </div>
         
+        <!-- SCREEN RECORDING -->
+        <div class="section-block">
+            <div class="section-header">SCREEN RECORDING</div>
+            <div style="background: #121212; border: 1px solid #222; border-radius: 8px; padding: 20px; text-align: center;">
+                <video controls style="width: 100%; max-width: 800px; border-radius: 8px; border: 1px solid #333;" preload="metadata">
+                    <source src="/faculty/session/{{ session.id }}/recording?type=screen" type="video/webm">
+                    Your browser does not support the video tag.
+                </video>
+                <p style="color: #888; font-size: 13px; margin-top: 15px;">
+                    This recording captures the student's screen during the viva. 
+                    Check the timeline below for exact timestamps of when screen sharing was stopped or resumed.
+                </p>
+            </div>
+        </div>
+        
         <!-- PROCTORING TIMELINE -->
         <div class="section-block">
             <div class="section-header">PROCTORING TIMELINE</div>
@@ -447,9 +468,9 @@
             {% if event_summary.events %}
                 <div class="timeline">
                     {% for event in event_summary.events %}
-                    <div class="timeline-event {{ 'event-face' if event.event_type == 'face_lost' else ('event-tab' if event.event_type in ['tab_switch', 'focus_loss'] else 'event-clipboard') }}">
+                    <div class="timeline-event {{ 'event-face' if event.event_type == 'face_lost' else ('event-tab' if event.event_type in ['tab_switch', 'focus_loss'] else ('event-screen' if event.event_type in ['screen_share_stopped', 'screen_share_resumed'] else 'event-clipboard')) }}">
                         <div class="event-header">
-                            <span class="event-type" style="color: {{ '#ff6b6b' if event.event_type == 'face_lost' else ('#ffaa00' if event.event_type in ['tab_switch', 'focus_loss'] else '#cc33ff') }}">
+                            <span class="event-type" style="color: {{ '#ff6b6b' if event.event_type == 'face_lost' else ('#ffaa00' if event.event_type in ['tab_switch', 'focus_loss'] else ('#00f2ff' if event.event_type in ['screen_share_stopped', 'screen_share_resumed'] else '#cc33ff')) }}">
                                 {% if event.event_type == 'face_lost' %}
                                     Face Not Detected
                                 {% elif event.event_type in ['tab_switch', 'focus_loss'] %}
@@ -462,6 +483,10 @@
                                     Cut Attempt Blocked
                                 {% elif event.event_type == 'context_menu_attempt' %}
                                     Right-Click Blocked
+                                {% elif event.event_type == 'screen_share_stopped' %}
+                                    Screen Share Revoked
+                                {% elif event.event_type == 'screen_share_resumed' %}
+                                    Screen Share Resumed
                                 {% else %}
                                     Integrity Event
                                 {% endif %}
