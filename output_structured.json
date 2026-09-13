@@ -1,102 +1,158 @@
 [
   {
     "question_number": 1,
-    "question": "How many data-quality issues were found in just 5 orders?",
-    "user_answer": "4",
-    "correct_answer": "2",
+    "question": "What real platform often uses to infer a missing payment method?",
+    "user_answer": "dont know",
+    "correct_answer": "The customer's saved or last-used option.",
     "verdict": "incorrect",
     "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
+    "missing_concepts": [
+      "saved",
+      "last-used"
+    ],
+    "reasoning": "The user provided a generic answer and did not match any key concepts from the correct answer."
   },
   {
     "question_number": 2,
+    "question": "What is the result of applying Mean Imputation to a missing customer age?",
+    "user_answer": "dont know ",
+    "correct_answer": "The missing customer age is replaced with the average of known values, approximately 33 years.",
+    "verdict": "incorrect",
+    "matched_concepts": [],
+    "missing_concepts": [
+      "Mean Imputation",
+      "missing customer age",
+      "known values",
+      "average"
+    ],
+    "reasoning": "User answered 'dont know' without referencing key concepts."
+  },
+  {
+    "question_number": 3,
+    "question": "How many data-quality issues were found in just 5 orders?",
+    "user_answer": "dont know",
+    "correct_answer": "2",
+    "verdict": "incorrect",
+    "matched_concepts": [],
+    "missing_concepts": [
+      "data-quality",
+      "issues",
+      "found",
+      "in",
+      "just",
+      "5",
+      "orders"
+    ],
+    "reasoning": ""
+  },
+  {
+    "question_number": 4,
     "question": "How often did UPI occur as a payment method in the dataset?",
     "user_answer": "dont know",
     "correct_answer": "2 orders.",
     "verdict": "incorrect",
     "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
-  },
-  {
-    "question_number": 3,
-    "question": "What method is used to impute a missing customer age in an order log?",
-    "user_answer": "mean",
-    "correct_answer": "Mean Imputation replaces a missing numeric value with the average of known values.",
-    "verdict": "incorrect",
-    "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
-  },
-  {
-    "question_number": 4,
-    "question": "Why is it essential to convert raw data into reliable information through data cleaning?",
-    "user_answer": "beacuse it is better for the annalysiis",
-    "correct_answer": "To make the data ready for analysis.",
-    "verdict": "incorrect",
-    "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
+    "missing_concepts": [
+      "UPI",
+      "payment method",
+      "dataset",
+      "orders"
+    ],
+    "reasoning": "Answer does not cover key terms in correct answer"
   },
   {
     "question_number": 5,
+    "question": "Why was Order O-1004's Payment Method imputed to UPI?",
+    "user_answer": "dont know",
+    "correct_answer": "Because it was the most frequent value in the dataset.",
+    "verdict": "incorrect",
+    "matched_concepts": [],
+    "missing_concepts": [
+      "most frequent value in the dataset"
+    ],
+    "reasoning": "The user's answer does not address the specific reason for the payment method imputation."
+  },
+  {
+    "question_number": 6,
     "question": "How did the author simplify the mean imputation method for educational purposes?",
     "user_answer": "dont know",
     "correct_answer": "By imputing by customer segment instead of the overall mean.",
     "verdict": "incorrect",
     "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
-  },
-  {
-    "question_number": 6,
-    "question": "What is the mode imputation method used for?",
-    "user_answer": "frequently repeat one take",
-    "correct_answer": "Mode Imputation replaces a missing category with the most frequently occurring one.",
-    "verdict": "incorrect",
-    "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
+    "missing_concepts": [
+      "imputing by customer segment",
+      "instead of the overall mean"
+    ],
+    "reasoning": "Answer is unrelated and does not mention key terms from correct answer"
   },
   {
     "question_number": 7,
-    "question": "What is the result of applying Mean Imputation to a missing customer age?",
-    "user_answer": "digits",
-    "correct_answer": "The missing customer age is replaced with the average of known values, approximately 33 years.",
+    "question": "Why is it essential to convert raw data into reliable information through data cleaning?",
+    "user_answer": "dont know",
+    "correct_answer": "To make the data ready for analysis.",
     "verdict": "incorrect",
     "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
+    "missing_concepts": [
+      "data cleaning",
+      "analysis"
+    ],
+    "reasoning": "Answer does not address the concept of data preparation"
   },
   {
     "question_number": 8,
-    "question": "What real platform often uses to infer a missing payment method?",
-    "user_answer": "imputations",
-    "correct_answer": "The customer's saved or last-used option.",
-    "verdict": "incorrect",
-    "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
-  },
-  {
-    "question_number": 9,
     "question": "Why is it necessary to resolve missing customer ages and payment methods before analysis?",
-    "user_answer": "dont know",
+    "user_answer": "beacuse we analysis missing values then it give the result very accuratly ",
     "correct_answer": "Missing customer ages skew age-group promotions, and a missing payment method breaks payment-success reporting.",
     "verdict": "incorrect",
     "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
+    "missing_concepts": [
+      "customer ages",
+      "payment methods"
+    ],
+    "reasoning": "The user's answer is unrelated to resolving missing customer ages and payment methods before analysis."
+  },
+  {
+    "question_number": 9,
+    "question": "What method is used to impute a missing customer age in an order log?",
+    "user_answer": "dont know",
+    "correct_answer": "Mean Imputation replaces a missing numeric value with the average of known values.",
+    "verdict": "incorrect",
+    "matched_concepts": [],
+    "missing_concepts": [
+      "Mean Imputation",
+      "replaces",
+      "a",
+      "numeric",
+      "value",
+      "with",
+      "the",
+      "average",
+      "of",
+      "known",
+      "values"
+    ],
+    "reasoning": "The user's answer is unrelated and incorrect, as it does not mention any imputation method."
   },
   {
     "question_number": 10,
-    "question": "Why was Order O-1004's Payment Method imputed to UPI?",
-    "user_answer": "donrt know",
-    "correct_answer": "Because it was the most frequent value in the dataset.",
+    "question": "What is the mode imputation method used for?",
+    "user_answer": "dont know",
+    "correct_answer": "Mode Imputation replaces a missing category with the most frequently occurring one.",
     "verdict": "incorrect",
     "matched_concepts": [],
-    "missing_concepts": [],
-    "reasoning": "(LLM evaluation failed)"
+    "missing_concepts": [
+      "Mode Imputation",
+      "replaces",
+      "a",
+      "missing",
+      "category",
+      "with",
+      "the",
+      "most",
+      "frequently",
+      "occurring",
+      "one"
+    ],
+    "reasoning": "User answer does not mention mode imputation method or its purpose"
   }
 ]

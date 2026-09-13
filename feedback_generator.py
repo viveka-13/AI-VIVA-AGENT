@@ -31,7 +31,7 @@ Rules:
 """
 
 
-def generate_session_feedback(subject, all_missing_concepts):
+def generate_session_feedback(subject, all_missing_concepts, total_score=0, max_marks=20):
     """
     Generate personalized feedback for a completed viva session.
 
@@ -39,6 +39,8 @@ def generate_session_feedback(subject, all_missing_concepts):
         subject: The subject/experiment name
         all_missing_concepts: List of lists — missing concepts per question
                               e.g. [["concept1", "concept2"], ["concept3"], ...]
+        total_score: The student's total score
+        max_marks: The maximum possible score
 
     Returns:
         dict with keys: weak_areas, explanation, study_recommendations
@@ -62,11 +64,26 @@ def generate_session_feedback(subject, all_missing_concepts):
             unique_missing.append(c.strip())
 
     if not unique_missing:
-        return {
-            "weak_areas": [],
-            "explanation": "Great job! You covered all the key concepts in your answers.",
-            "study_recommendations": "Keep up the good work. Consider reviewing edge cases and advanced topics to deepen your understanding."
-        }
+        # Determine feedback based on score ratio instead of blindly saying "Great job"
+        ratio = total_score / max_marks if max_marks > 0 else 0
+        if ratio >= 0.9:
+            return {
+                "weak_areas": [],
+                "explanation": "Great job! You covered all the key concepts in your answers.",
+                "study_recommendations": "Keep up the good work. Consider reviewing edge cases and advanced topics to deepen your understanding."
+            }
+        elif ratio >= 0.6:
+            return {
+                "weak_areas": [],
+                "explanation": f"Good effort! You scored {total_score}/{max_marks}, but some topics were missed or incomplete.",
+                "study_recommendations": "Review the core concepts for this experiment to fill in the gaps and improve your score."
+            }
+        else:
+            return {
+                "weak_areas": [],
+                "explanation": f"Your score is {total_score}/{max_marks}. Significant knowledge gaps were observed.",
+                "study_recommendations": "Review the core concepts covered in this viva before attempting it again."
+            }
 
     prompt = FEEDBACK_PROMPT_TEMPLATE.format(
         subject=subject,
@@ -79,13 +96,13 @@ def generate_session_feedback(subject, all_missing_concepts):
             messages=[{"role": "user", "content": prompt}]
         )
         raw = response["message"]["content"].strip()
-        return _parse_feedback_json(raw)
+        return _parse_feedback_json(raw, total_score, max_marks)
     except Exception as e:
         print(f"[FEEDBACK] LLM call failed: {e}")
-        return _fallback_feedback(unique_missing)
+        return _fallback_feedback(unique_missing, total_score, max_marks)
 
 
-def _parse_feedback_json(raw_text):
+def _parse_feedback_json(raw_text, total_score=0, max_marks=20):
     """
     Extract and parse JSON from the LLM response.
     Handles cases where the model wraps JSON in markdown code blocks.
@@ -112,10 +129,10 @@ def _parse_feedback_json(raw_text):
     except (json.JSONDecodeError, TypeError) as e:
         print(f"[FEEDBACK] JSON parse failed: {e}")
         print(f"[FEEDBACK] Raw text was: {raw_text[:300]}")
-        return _fallback_feedback([])
+        return _fallback_feedback([], total_score, max_marks)
 
 
-def _fallback_feedback(missing_concepts):
+def _fallback_feedback(missing_concepts, total_score=0, max_marks=20):
     """Generate a basic fallback feedback when LLM fails."""
     if missing_concepts:
         topics = ", ".join(missing_concepts[:5])
@@ -124,8 +141,23 @@ def _fallback_feedback(missing_concepts):
             "explanation": f"Based on your answers, you may want to strengthen your understanding of: {topics}.",
             "study_recommendations": "Review these topics in your course material and try practice questions to build confidence."
         }
-    return {
-        "weak_areas": [],
-        "explanation": "Your session has been evaluated.",
-        "study_recommendations": "Review the source material for deeper understanding."
-    }
+        
+    ratio = total_score / max_marks if max_marks > 0 else 0
+    if ratio >= 0.9:
+        return {
+            "weak_areas": [],
+            "explanation": "Your session has been evaluated.",
+            "study_recommendations": "Great job! Keep up the good work."
+        }
+    elif ratio >= 0.6:
+        return {
+            "weak_areas": [],
+            "explanation": f"Your session has been evaluated. Score: {total_score}/{max_marks}.",
+            "study_recommendations": "Review the source material to improve your understanding."
+        }
+    else:
+        return {
+            "weak_areas": [],
+            "explanation": f"Your session has been evaluated. Score: {total_score}/{max_marks}.",
+            "study_recommendations": "Please heavily review the core material for this experiment."
+        }

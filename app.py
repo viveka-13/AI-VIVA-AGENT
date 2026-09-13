@@ -241,12 +241,11 @@ def submit():
                 "reasoning": "Failed to parse AI evaluation."
             })
             
-    # Generate Post-Session Feedback
-    feedback_summary = feedback_generator.generate_session_feedback(experiment, all_missing_concepts)
-
-        
     total_score = sum(database._parse_verdict(ans["raw_verdict"])[1] for ans in answers_data)
     max_marks = len(answers_data) * 2
+
+    # Generate Post-Session Feedback
+    feedback_summary = feedback_generator.generate_session_feedback(experiment, all_missing_concepts, total_score, max_marks)
     
     # Check time limit server-side
     session_start_iso = session.get("start_time")

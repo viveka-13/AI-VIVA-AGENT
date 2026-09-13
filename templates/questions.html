@@ -311,17 +311,17 @@
         text-align: center; padding: 40px;
     ">
         <div style="max-width: 500px;">
-            <div style="font-size: 48px; margin-bottom: 20px;">🖥️</div>
-            <h2 style="color: #00f2ff; font-size: 24px; margin-bottom: 15px;">Screen Sharing Required</h2>
+            <div style="font-size: 48px; margin-bottom: 20px;">🖥️ 📸</div>
+            <h2 style="color: #00f2ff; font-size: 24px; margin-bottom: 15px;">Screen & Camera Required</h2>
             <p style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
-                Your screen will be recorded during this test as part of academic integrity monitoring.
+                Your screen and webcam will be recorded during this test as part of academic integrity monitoring.
                 This recording is for faculty review only — it is not an automatic penalty.
             </p>
             <button id="startShareBtn" onclick="requestScreenShare()" style="
                 padding: 14px 36px; background: linear-gradient(to right, #0077ff, #00f2ff);
                 color: #000; border: none; border-radius: 25px; font-size: 16px;
                 font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-            ">Start Screen Share</button>
+            ">Start Screen & Camera Share</button>
             <p id="shareError" style="color: #ff6b6b; font-size: 13px; margin-top: 15px; display: none;"></p>
         </div>
     </div>
@@ -358,7 +358,7 @@
         animation: fadeIn 0.3s ease;
     ">
         <span style="display: inline-block; width: 8px; height: 8px; background: #00c850; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite;"></span>
-        Screen sharing active
+        Screen + Camera recording active
     </div>
     <style>
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -822,13 +822,7 @@ Answer the following questions</h2>
     </script>
 
     <!-- ============================================================
-         SCREEN RECORDING (MONITORING ONLY — NOT AUTO-PENALTY)
-         ============================================================
-         Uses getDisplayMedia + MediaRecorder to capture the student's
-         screen during the test. Chunks are uploaded every 15 seconds.
-         If the student revokes sharing, the test is paused (not
-         auto-submitted) until they re-share. Faculty review the
-         recording afterward — no automatic penalties are applied.
+         SCREEN & WEBCAM RECORDING (MONITORING ONLY)
          ============================================================ -->
     <script>
     (function() {
@@ -836,8 +830,10 @@ Answer the following questions</h2>
         if (!SESSION_ID || SESSION_ID === 'None') return;
 
         const API_URL = '/api/session/' + SESSION_ID + '/integrity-event';
-        const CHUNK_URL = '/api/session/' + SESSION_ID + '/video-chunk?type=screen';
-        const FINALIZE_URL = '/api/session/' + SESSION_ID + '/finalize-recording?type=screen';
+        const CHUNK_URL_SCREEN = '/api/session/' + SESSION_ID + '/video-chunk?type=screen';
+        const FINALIZE_URL_SCREEN = '/api/session/' + SESSION_ID + '/finalize-recording?type=screen';
+        const CHUNK_URL_WEBCAM = '/api/session/' + SESSION_ID + '/video-chunk?type=webcam';
+        const FINALIZE_URL_WEBCAM = '/api/session/' + SESSION_ID + '/finalize-recording?type=webcam';
 
         const gate = document.getElementById('screenShareGate');
         const revokedOverlay = document.getElementById('screenShareRevoked');
@@ -845,10 +841,11 @@ Answer the following questions</h2>
         const shareError = document.getElementById('shareError');
         const revokeTimerEl = document.getElementById('revokeTimer');
 
-        let mediaRecorder = null;
+        let screenRecorder = null;
+        let webcamRecorder = null;
         let screenStream = null;
+        let webcamStream = null;
         let isRecording = false;
-        let chunkQueue = [];
 
         function getActiveQ() {
             const el = document.activeElement;
@@ -858,18 +855,18 @@ Answer the following questions</h2>
             return null;
         }
 
-        // Upload a chunk with retry logic (up to 3 attempts)
-        async function uploadChunk(blob, retries) {
+        // Upload a chunk with retry logic
+        async function uploadChunk(url, blob, retries) {
             retries = retries || 0;
             try {
-                const resp = await fetch(CHUNK_URL, { method: 'POST', body: blob });
+                const resp = await fetch(url, { method: 'POST', body: blob });
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
             } catch (err) {
                 if (retries < 3) {
                     await new Promise(r => setTimeout(r, 1000 * (retries + 1)));
-                    return uploadChunk(blob, retries + 1);
+                    return uploadChunk(url, blob, retries + 1);
                 }
-                console.error('[SCREEN] Chunk upload failed after 3 retries:', err);
+                console.error('[RECORDING] Chunk upload failed after 3 retries:', err);
                 fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -877,53 +874,95 @@ Answer the following questions</h2>
                         event_type: 'recording_chunk_lost',
                         timestamp: new Date().toISOString(),
                         duration_seconds: 0,
-                        details: 'A screen recording chunk failed to upload after 3 retries'
+                        details: 'A video chunk failed to upload after 3 retries'
                     })
                 }).catch(function() {});
             }
         }
 
-        function startRecording(stream) {
-            screenStream = stream;
+        function createRecorder(stream, uploadUrl, typeName) {
+            let recorder;
             try {
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
             } catch (e) {
-                mediaRecorder = new MediaRecorder(stream);
+                recorder = new MediaRecorder(stream);
             }
 
-            mediaRecorder.ondataavailable = function(e) {
+            recorder.ondataavailable = function(e) {
                 if (e.data && e.data.size > 0) {
-                    uploadChunk(e.data);
+                    uploadChunk(uploadUrl, e.data);
                 }
             };
 
-            mediaRecorder.start(15000); // 15-second timeslice
+            return recorder;
+        }
+
+        function startRecording(sStream, wStream) {
+            screenStream = sStream;
+            webcamStream = wStream;
+            
+            screenRecorder = createRecorder(sStream, CHUNK_URL_SCREEN, 'screen');
+            webcamRecorder = createRecorder(wStream, CHUNK_URL_WEBCAM, 'webcam');
+
+            // Log exact start time for synchronization on playback
+            const startTime = new Date().toISOString();
+            
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'recording_started',
+                    timestamp: startTime,
+                    duration_seconds: 0,
+                    details: 'screen'
+                })
+            }).catch(function() {});
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'recording_started',
+                    timestamp: startTime,
+                    duration_seconds: 0,
+                    details: 'webcam'
+                })
+            }).catch(function() {});
+
+            screenRecorder.start(15000); // 15-second timeslice
+            webcamRecorder.start(15000);
+            
             isRecording = true;
             badge.style.display = 'inline-block';
 
             // Listen for revocation (student clicks "Stop sharing")
-            stream.getVideoTracks()[0].addEventListener('ended', function() {
+            sStream.getVideoTracks()[0].addEventListener('ended', function() {
                 handleRevocation();
             });
+            // Some browsers allow stopping webcam from the address bar, handle that too
+            if (wStream.getVideoTracks().length > 0) {
+                wStream.getVideoTracks()[0].addEventListener('ended', function() {
+                    handleRevocation();
+                });
+            }
         }
 
         function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            }
+            if (screenRecorder && screenRecorder.state !== 'inactive') screenRecorder.stop();
+            if (webcamRecorder && webcamRecorder.state !== 'inactive') webcamRecorder.stop();
             isRecording = false;
             badge.style.display = 'none';
-            if (screenStream) {
-                screenStream.getTracks().forEach(function(t) { t.stop(); });
-            }
+            if (screenStream) screenStream.getTracks().forEach(function(t) { t.stop(); });
+            if (webcamStream) webcamStream.getTracks().forEach(function(t) { t.stop(); });
         }
 
         function handleRevocation() {
+            if (!isRecording) return; // Prevent double-triggering
             isRecording = false;
             badge.style.display = 'none';
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            }
+            
+            if (screenRecorder && screenRecorder.state !== 'inactive') screenRecorder.stop();
+            if (webcamRecorder && webcamRecorder.state !== 'inactive') webcamRecorder.stop();
 
             // Log integrity event
             const qNum = getActiveQ();
@@ -934,7 +973,7 @@ Answer the following questions</h2>
                     event_type: 'screen_share_stopped',
                     timestamp: new Date().toISOString(),
                     duration_seconds: 0,
-                    details: 'Student stopped screen sharing' + (qNum ? ' while on Q' + qNum : '')
+                    details: 'Student stopped screen/webcam sharing' + (qNum ? ' while on Q' + qNum : '')
                 })
             }).catch(function() {});
 
@@ -952,18 +991,18 @@ Answer the following questions</h2>
                 if (elapsed <= 60) {
                     revokeTimerEl.textContent = 'Please re-share within ' + (60 - elapsed) + ' seconds.';
                 } else {
-                    revokeTimerEl.textContent = 'Test remains paused. Please re-share your screen to continue.';
+                    revokeTimerEl.textContent = 'Test remains paused. Please re-share to continue.';
                 }
             }, 1000);
 
-            // Store interval so we can clear it on re-share
             revokedOverlay.dataset.countdownId = countdownInterval;
         }
 
-        // Global function called by both gate and revoked overlay buttons
         window.requestScreenShare = async function() {
             try {
-                var stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                // Request both display and user media
+                const sStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const wStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
 
                 // If re-sharing (revoked overlay visible), log resume event
                 if (revokedOverlay.style.display === 'flex') {
@@ -974,7 +1013,7 @@ Answer the following questions</h2>
                             event_type: 'screen_share_resumed',
                             timestamp: new Date().toISOString(),
                             duration_seconds: 0,
-                            details: 'Student re-shared their screen'
+                            details: 'Student re-shared screen/webcam'
                         })
                     }).catch(function() {});
 
@@ -989,16 +1028,20 @@ Answer the following questions</h2>
                     revokedOverlay.style.display = 'none';
                 }
 
-                // Hide the initial gate
                 gate.style.display = 'none';
-
-                // Start a fresh MediaRecorder
-                startRecording(stream);
+                shareError.style.display = 'none';
+                
+                startRecording(sStream, wStream);
 
             } catch (err) {
                 shareError.style.display = 'block';
-                shareError.textContent = 'Screen share denied or cancelled. You must share your screen to begin the test.';
-                console.log('[SCREEN] getDisplayMedia error:', err.message);
+                shareError.textContent = 'Permission denied. Both screen share and camera access are required to begin.';
+                console.log('[RECORDING] setup error:', err.message);
+                
+                // If they granted one but denied the other, clean up the tracks
+                if (err.name !== 'NotAllowedError') {
+                    // Sometimes permissions error out without giving the stream, but if they do, we shouldn't leave them active
+                }
             }
         };
 
@@ -1012,13 +1055,17 @@ Answer the following questions</h2>
 
                     // Small delay to let final chunk upload, then finalize
                     setTimeout(function() {
-                        fetch(FINALIZE_URL, { method: 'POST' })
-                            .then(function() { vivaForm.submit(); })
-                            .catch(function() { vivaForm.submit(); });
+                        Promise.all([
+                            fetch(FINALIZE_URL_SCREEN, { method: 'POST' }).catch(function(){}),
+                            fetch(FINALIZE_URL_WEBCAM, { method: 'POST' }).catch(function(){})
+                        ]).then(function() {
+                            vivaForm.submit();
+                        });
                     }, 1000);
                 } else {
                     // Not recording — just finalize whatever chunks exist
-                    fetch(FINALIZE_URL, { method: 'POST' }).catch(function() {});
+                    fetch(FINALIZE_URL_SCREEN, { method: 'POST' }).catch(function() {});
+                    fetch(FINALIZE_URL_WEBCAM, { method: 'POST' }).catch(function() {});
                 }
             });
         }

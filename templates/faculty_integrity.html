@@ -446,19 +446,39 @@
             {% endif %}
         </div>
         
-        <!-- SCREEN RECORDING -->
+        <!-- DUAL SCREEN & WEBCAM RECORDING -->
         <div class="section-block">
-            <div class="section-header">SCREEN RECORDING</div>
-            <div style="background: #121212; border: 1px solid #222; border-radius: 8px; padding: 20px; text-align: center;">
-                <video controls style="width: 100%; max-width: 800px; border-radius: 8px; border: 1px solid #333;" preload="metadata">
-                    <source src="/faculty/session/{{ session.id }}/recording?type=screen" type="video/webm">
-                    Your browser does not support the video tag.
-                </video>
-                <p style="color: #888; font-size: 13px; margin-top: 15px;">
-                    This recording captures the student's screen during the viva. 
-                    Check the timeline below for exact timestamps of when screen sharing was stopped or resumed.
-                </p>
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>SCREEN & WEBCAM RECORDINGS</span>
+                <button id="masterPlayPauseBtn" style="
+                    background: linear-gradient(to right, #0077ff, #00f2ff);
+                    color: #000; border: none; border-radius: 4px; padding: 6px 12px;
+                    font-size: 12px; font-weight: bold; cursor: pointer;
+                ">Play All</button>
             </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #121212; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+                <!-- Screen Video -->
+                <div style="text-align: center;">
+                    <div style="color: #888; font-size: 11px; margin-bottom: 8px; letter-spacing: 1px;">SCREEN SHARE</div>
+                    <video id="screenVideo" controls style="width: 100%; border-radius: 6px; border: 1px solid #333;" preload="metadata">
+                        <source src="/faculty/session/{{ session.id }}/recording?type=screen" type="video/webm">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                
+                <!-- Webcam Video -->
+                <div style="text-align: center;">
+                    <div style="color: #888; font-size: 11px; margin-bottom: 8px; letter-spacing: 1px;">WEBCAM</div>
+                    <video id="webcamVideo" controls style="width: 100%; border-radius: 6px; border: 1px solid #333;" preload="metadata">
+                        <source src="/faculty/session/{{ session.id }}/recording?type=webcam" type="video/webm">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+            <p style="color: #888; font-size: 12px; margin-top: 15px; text-align: center;">
+                Click any event in the timeline below to jump both recordings exactly to that moment.
+            </p>
         </div>
         
         <!-- PROCTORING TIMELINE -->
@@ -468,7 +488,12 @@
             {% if event_summary.events %}
                 <div class="timeline">
                     {% for event in event_summary.events %}
-                    <div class="timeline-event {{ 'event-face' if event.event_type == 'face_lost' else ('event-tab' if event.event_type in ['tab_switch', 'focus_loss'] else ('event-screen' if event.event_type in ['screen_share_stopped', 'screen_share_resumed'] else 'event-clipboard')) }}">
+                    <div class="timeline-event {{ 'event-face' if event.event_type == 'face_lost' else ('event-tab' if event.event_type in ['tab_switch', 'focus_loss'] else ('event-screen' if event.event_type in ['screen_share_stopped', 'screen_share_resumed', 'recording_started'] else 'event-clipboard')) }}"
+                         data-timestamp="{{ event.timestamp }}"
+                         style="cursor: pointer; transition: background 0.2s;"
+                         onmouseover="this.style.background='#1a1a1a'"
+                         onmouseout="this.style.background='linear-gradient(145deg, #121212, #1a1a1a)'"
+                         title="Click to seek videos to this event">
                         <div class="event-header">
                             <span class="event-type" style="color: {{ '#ff6b6b' if event.event_type == 'face_lost' else ('#ffaa00' if event.event_type in ['tab_switch', 'focus_loss'] else ('#00f2ff' if event.event_type in ['screen_share_stopped', 'screen_share_resumed'] else '#cc33ff')) }}">
                                 {% if event.event_type == 'face_lost' %}
@@ -487,6 +512,8 @@
                                     Screen Share Revoked
                                 {% elif event.event_type == 'screen_share_resumed' %}
                                     Screen Share Resumed
+                                {% elif event.event_type == 'recording_started' %}
+                                    Recording Started ({{ event.details }})
                                 {% else %}
                                     Integrity Event
                                 {% endif %}
@@ -496,7 +523,7 @@
                         {% if event.duration_seconds > 0 %}
                         <div class="event-detail">Duration: {{ event.duration_seconds|round(1) }}s</div>
                         {% endif %}
-                        {% if event.details %}
+                        {% if event.details and event.event_type != 'recording_started' %}
                         <div class="event-detail">{{ event.details }}</div>
                         {% endif %}
                     </div>
@@ -508,5 +535,68 @@
         </div>
 
     </div>
+
+    <!-- SYNCHRONIZED VIDEO PLAYBACK SCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const screenVid = document.getElementById('screenVideo');
+            const webcamVid = document.getElementById('webcamVideo');
+            const masterBtn = document.getElementById('masterPlayPauseBtn');
+
+            // Find video start times from timeline events to sync playback
+            // If they don't exist (legacy sessions), fallback to session timestamp
+            let screenStartTime = null;
+            let webcamStartTime = null;
+
+            document.querySelectorAll('.timeline-event').forEach(el => {
+                const ts = el.dataset.timestamp;
+                const txt = el.querySelector('.event-type').innerText;
+                if (txt.includes('Recording Started (screen)') && !screenStartTime) {
+                    screenStartTime = new Date(ts).getTime();
+                }
+                if (txt.includes('Recording Started (webcam)') && !webcamStartTime) {
+                    webcamStartTime = new Date(ts).getTime();
+                }
+            });
+
+            // Master Play/Pause
+            let isPlaying = false;
+            masterBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    screenVid.pause();
+                    webcamVid.pause();
+                    masterBtn.innerText = 'Play All';
+                } else {
+                    screenVid.play();
+                    webcamVid.play();
+                    masterBtn.innerText = 'Pause All';
+                }
+                isPlaying = !isPlaying;
+            });
+
+            // If one video ends, reset play button
+            screenVid.addEventListener('ended', () => { isPlaying = false; masterBtn.innerText = 'Play All'; });
+            webcamVid.addEventListener('ended', () => { isPlaying = false; masterBtn.innerText = 'Play All'; });
+
+            // Timeline Click-to-Seek logic
+            document.querySelectorAll('.timeline-event').forEach(el => {
+                el.addEventListener('click', () => {
+                    const eventTime = new Date(el.dataset.timestamp).getTime();
+                    
+                    if (screenStartTime) {
+                        const screenOffsetSecs = (eventTime - screenStartTime) / 1000;
+                        if (screenOffsetSecs >= 0) screenVid.currentTime = screenOffsetSecs;
+                    }
+                    if (webcamStartTime) {
+                        const webcamOffsetSecs = (eventTime - webcamStartTime) / 1000;
+                        if (webcamOffsetSecs >= 0) webcamVid.currentTime = webcamOffsetSecs;
+                    }
+
+                    // Optional: automatically play when seeking
+                    // screenVid.play(); webcamVid.play(); isPlaying = true; masterBtn.innerText = 'Pause All';
+                });
+            });
+        });
+    </script>
 </body>
 </html>
