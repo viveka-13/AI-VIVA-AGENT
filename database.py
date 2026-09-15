@@ -114,7 +114,27 @@ def init_db():
         cursor.execute("ALTER TABLE viva_sessions ADD COLUMN feedback_summary TEXT")
     except sqlite3.OperationalError:
         pass
-    
+    try:
+        cursor.execute("ALTER TABLE exam_schedules ADD COLUMN max_violations INTEGER NOT NULL DEFAULT 3")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE exam_schedules ADD COLUMN violation_action TEXT NOT NULL DEFAULT 'log_only'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE exam_schedules ADD COLUMN recording_retention_days INTEGER NOT NULL DEFAULT 30")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE viva_sessions ADD COLUMN auto_deleted INTEGER NOT NULL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE viva_sessions ADD COLUMN consent_timestamp TEXT")
+    except sqlite3.OperationalError:
+        pass
+        
     conn.commit()
     conn.close()
 
@@ -167,6 +187,22 @@ def create_pending_session(student_name, roll_no, subject, subject_slug):
     conn.commit()
     conn.close()
     return session_id
+
+
+def lock_session(session_id):
+    """Mark a session as locked for faculty review."""
+    conn = get_db()
+    conn.execute("UPDATE viva_sessions SET status = 'locked' WHERE id = ?", (session_id,))
+    conn.commit()
+    conn.close()
+
+
+def unlock_session(session_id):
+    """Unlock a session so a student can resume."""
+    conn = get_db()
+    conn.execute("UPDATE viva_sessions SET status = 'pending' WHERE id = ?", (session_id,))
+    conn.commit()
+    conn.close()
 
 
 def finalize_session(session_id, answers_data, total_score, max_marks, feedback_summary=None):
@@ -501,17 +537,20 @@ def get_exam_schedule(subject_slug):
     conn.close()
     return dict(row) if row else None
 
-def save_exam_schedule(subject_slug, start_time, end_time, time_limit, pool_size):
+def save_exam_schedule(subject_slug, start_time, end_time, time_limit, pool_size, max_violations=3, violation_action='log_only', recording_retention_days=30):
     conn = get_db()
     conn.execute("""
-        INSERT INTO exam_schedules (subject_slug, start_time, end_time, time_limit, pool_size)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO exam_schedules (subject_slug, start_time, end_time, time_limit, pool_size, max_violations, violation_action, recording_retention_days)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(subject_slug) DO UPDATE SET
             start_time=excluded.start_time,
             end_time=excluded.end_time,
             time_limit=excluded.time_limit,
-            pool_size=excluded.pool_size
-    """, (subject_slug, start_time, end_time, time_limit, pool_size))
+            pool_size=excluded.pool_size,
+            max_violations=excluded.max_violations,
+            violation_action=excluded.violation_action,
+            recording_retention_days=excluded.recording_retention_days
+    """, (subject_slug, start_time, end_time, time_limit, pool_size, max_violations, violation_action, recording_retention_days))
     conn.commit()
     conn.close()
 

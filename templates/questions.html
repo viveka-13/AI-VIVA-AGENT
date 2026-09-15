@@ -303,24 +303,37 @@
 
 
 <body>
-    <!-- SCREEN SHARE GATE OVERLAY -->
+    <!-- UNIFIED CONSENT & SCREEN SHARE GATE OVERLAY -->
     <div id="screenShareGate" style="
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background: rgba(10, 10, 10, 0.97); z-index: 10000;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
         text-align: center; padding: 40px;
     ">
-        <div style="max-width: 500px;">
+        <div style="max-width: 540px;">
             <div style="font-size: 48px; margin-bottom: 20px;">🖥️ 📸</div>
-            <h2 style="color: #00f2ff; font-size: 24px; margin-bottom: 15px;">Screen & Camera Required</h2>
-            <p style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
-                Your screen and webcam will be recorded during this test as part of academic integrity monitoring.
-                This recording is for faculty review only — it is not an automatic penalty.
+            <h2 style="color: #00f2ff; font-size: 24px; margin-bottom: 15px;">Exam Proctoring Consent</h2>
+            <p style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
+                This exam uses automated proctoring. By proceeding, you acknowledge and agree to the following:
             </p>
-            <button id="startShareBtn" onclick="requestScreenShare()" style="
-                padding: 14px 36px; background: linear-gradient(to right, #0077ff, #00f2ff);
-                color: #000; border: none; border-radius: 25px; font-size: 16px;
-                font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            <ul style="color: #ccc; font-size: 13px; line-height: 1.8; text-align: left; margin: 0 auto 18px; max-width: 440px; list-style: none; padding: 0;">
+                <li style="margin-bottom: 6px;">🖥️ <strong>Screen activity</strong> — your entire screen will be recorded.</li>
+                <li style="margin-bottom: 6px;">📸 <strong>Webcam</strong> — your camera feed will be recorded for face detection.</li>
+                <li style="margin-bottom: 6px;">📋 <strong>Integrity events</strong> — tab switches, copy/paste attempts, and focus loss are logged.</li>
+                <li style="margin-bottom: 6px;">🔒 <strong>Fullscreen mode</strong> — you must remain in fullscreen during the exam.</li>
+                <li style="margin-bottom: 6px;">🗓️ <strong>Retention</strong> — recordings are retained for <span style="color: #00f2ff; font-weight: 600;">{{ recording_retention_days | default(30) }} days</span> and then automatically deleted.</li>
+            </ul>
+            <p style="color: #888; font-size: 12px; line-height: 1.5; margin-bottom: 18px;">
+                All recordings are for faculty review only — they do not trigger automatic penalties.
+            </p>
+            <label id="consentLabel" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; cursor: pointer; color: #ccc; font-size: 13px;">
+                <input type="checkbox" id="consentCheckbox" style="width: 18px; height: 18px; accent-color: #00f2ff; cursor: pointer;">
+                I understand and agree to begin the proctored exam.
+            </label>
+            <button id="startShareBtn" disabled onclick="requestScreenShare()" style="
+                padding: 14px 36px; background: linear-gradient(to right, #333, #444);
+                color: #666; border: none; border-radius: 25px; font-size: 16px;
+                font-weight: 600; cursor: not-allowed; transition: all 0.3s ease;
             ">Start Screen & Camera Share</button>
             <p id="shareError" style="color: #ff6b6b; font-size: 13px; margin-top: 15px; display: none;"></p>
         </div>
@@ -346,6 +359,50 @@
                 color: #000; border: none; border-radius: 25px; font-size: 16px;
                 font-weight: 600; cursor: pointer;
             ">Re-share Screen</button>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN GATE OVERLAY (shown after screen share is approved) -->
+    <div id="fullscreenGate" style="
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(10, 10, 10, 0.97); z-index: 10002;
+        display: none; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; padding: 40px;
+    ">
+        <div style="max-width: 500px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+            <h2 style="color: #00f2ff; font-size: 24px; margin-bottom: 15px;">Enter Full-Screen Mode</h2>
+            <p style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
+                This test must be taken in full-screen mode. Exiting full-screen will be logged
+                as a violation. Repeated violations may result in automatic submission or test lockout.
+            </p>
+            <button id="enterFullscreenBtn" style="
+                padding: 14px 36px; background: linear-gradient(to right, #0077ff, #00f2ff);
+                color: #000; border: none; border-radius: 25px; font-size: 16px;
+                font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            ">🔒 Enter Full-Screen & Start Test</button>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN VIOLATION WARNING MODAL -->
+    <div id="fullscreenWarningModal" style="
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(10, 10, 10, 0.95); z-index: 10003;
+        display: none; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; padding: 40px;
+    ">
+        <div style="max-width: 500px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+            <h2 id="fsWarningTitle" style="color: #ff6b6b; font-size: 24px; margin-bottom: 15px;">Full-Screen Violation</h2>
+            <p id="fsWarningMessage" style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+                You exited full-screen mode. This violation has been logged.
+            </p>
+            <p id="fsViolationCounter" style="color: #ffaa00; font-size: 13px; margin-bottom: 20px;"></p>
+            <button id="resumeFullscreenBtn" style="
+                padding: 14px 36px; background: linear-gradient(to right, #0077ff, #00f2ff);
+                color: #000; border: none; border-radius: 25px; font-size: 16px;
+                font-weight: 600; cursor: pointer;
+            ">🔒 Return to Full-Screen & Continue</button>
         </div>
     </div>
 
@@ -627,10 +684,16 @@ Answer the following questions</h2>
         let faceLostSince = null;
         const FACE_LOST_THRESHOLD = 10; // seconds before logging event
 
-        async function initWebcam() {
+        // initWebcam now accepts an existing webcam stream from requestScreenShare
+        // so the user is only prompted for camera access ONCE.
+        async function initWebcam(existingStream) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
-                video.srcObject = stream;
+                if (existingStream) {
+                    video.srcObject = existingStream;
+                } else {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                    video.srcObject = stream;
+                }
 
                 // Load face-api models from CDN
                 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
@@ -644,6 +707,9 @@ Answer the following questions</h2>
                 video.style.display = 'none';
             }
         }
+
+        // Expose initWebcam globally so the recording script can call it
+        window.__initWebcamWithStream = initWebcam;
 
         async function checkFace() {
             try {
@@ -676,15 +742,8 @@ Answer the following questions</h2>
             }
         }
 
-        // Start webcam after page loads
-        if (typeof faceapi !== 'undefined') {
-            initWebcam();
-        } else {
-            // face-api.js is deferred, wait for it
-            window.addEventListener('load', function() {
-                setTimeout(initWebcam, 1000);
-            });
-        }
+        // NOTE: We no longer auto-start initWebcam() on page load.
+        // It will be called from requestScreenShare() with the existing webcam stream.
     })();
     </script>
 
@@ -935,14 +994,36 @@ Answer the following questions</h2>
             isRecording = true;
             badge.style.display = 'inline-block';
 
+            // Dynamic badge: monitor both streams and update text
+            function updateBadgeStatus() {
+                if (!isRecording) return;
+                var screenOk = screenStream && screenStream.getVideoTracks().some(function(t) { return t.readyState === 'live'; });
+                var camOk = webcamStream && webcamStream.getVideoTracks().some(function(t) { return t.readyState === 'live'; });
+                if (screenOk && camOk) {
+                    badge.textContent = '\uD83D\uDD34 Screen + Camera recording active';
+                } else if (screenOk) {
+                    badge.textContent = '\uD83D\uDD34 Recording: Screen only (camera lost)';
+                } else if (camOk) {
+                    badge.textContent = '\uD83D\uDD34 Recording: Camera only (screen lost)';
+                } else {
+                    badge.textContent = '\u26A0\uFE0F Recording stopped';
+                }
+            }
+            window.__badgeInterval = setInterval(updateBadgeStatus, 3000);
+
             // Listen for revocation (student clicks "Stop sharing")
             sStream.getVideoTracks()[0].addEventListener('ended', function() {
+                updateBadgeStatus();
                 handleRevocation();
             });
             // Some browsers allow stopping webcam from the address bar, handle that too
             if (wStream.getVideoTracks().length > 0) {
                 wStream.getVideoTracks()[0].addEventListener('ended', function() {
-                    handleRevocation();
+                    updateBadgeStatus();
+                    // Only full revocation if screen is also gone
+                    if (!screenStream || !screenStream.getVideoTracks().some(function(t) { return t.readyState === 'live'; })) {
+                        handleRevocation();
+                    }
                 });
             }
         }
@@ -998,11 +1079,40 @@ Answer the following questions</h2>
             revokedOverlay.dataset.countdownId = countdownInterval;
         }
 
+        // Consent checkbox toggle
+        var consentCb = document.getElementById('consentCheckbox');
+        var startBtn = document.getElementById('startShareBtn');
+        if (consentCb && startBtn) {
+            consentCb.addEventListener('change', function() {
+                if (consentCb.checked) {
+                    startBtn.disabled = false;
+                    startBtn.style.background = 'linear-gradient(to right, #0077ff, #00f2ff)';
+                    startBtn.style.color = '#000';
+                    startBtn.style.cursor = 'pointer';
+                } else {
+                    startBtn.disabled = true;
+                    startBtn.style.background = 'linear-gradient(to right, #333, #444)';
+                    startBtn.style.color = '#666';
+                    startBtn.style.cursor = 'not-allowed';
+                }
+            });
+        }
+
         window.requestScreenShare = async function() {
             try {
+                // Log consent to the server (first time only)
+                if (gate.style.display !== 'none') {
+                    fetch('/api/session/' + SESSION_ID + '/consent', { method: 'POST' }).catch(function() {});
+                }
+
                 // Request both display and user media
                 const sStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
                 const wStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+
+                // Pass webcam stream to face detection (avoids double-prompt)
+                if (window.__initWebcamWithStream) {
+                    window.__initWebcamWithStream(wStream);
+                }
 
                 // If re-sharing (revoked overlay visible), log resume event
                 if (revokedOverlay.style.display === 'flex') {
@@ -1033,15 +1143,16 @@ Answer the following questions</h2>
                 
                 startRecording(sStream, wStream);
 
+                // Show fullscreen gate (only on initial share, not re-share)
+                var fsGate = document.getElementById('fullscreenGate');
+                if (fsGate && !window.__fullscreenActivated) {
+                    fsGate.style.display = 'flex';
+                }
+
             } catch (err) {
                 shareError.style.display = 'block';
                 shareError.textContent = 'Permission denied. Both screen share and camera access are required to begin.';
                 console.log('[RECORDING] setup error:', err.message);
-                
-                // If they granted one but denied the other, clean up the tracks
-                if (err.name !== 'NotAllowedError') {
-                    // Sometimes permissions error out without giving the stream, but if they do, we shouldn't leave them active
-                }
             }
         };
 
@@ -1069,6 +1180,138 @@ Answer the following questions</h2>
                 }
             });
         }
+    })();
+    </script>
+
+    <!-- ============================================================
+         FULL-SCREEN ENFORCEMENT & ESCALATION
+         ============================================================
+         Requires full-screen mode during the test. Exiting is logged
+         as a fullscreen_exit violation. Server returns violation count
+         and may trigger auto_submit or lock_review based on faculty config.
+         ============================================================ -->
+    <script>
+    (function() {
+        const SESSION_ID = '{{ session_id }}';
+        if (!SESSION_ID || SESSION_ID === 'None') return;
+
+        const API_URL = '/api/session/' + SESSION_ID + '/integrity-event';
+        const fsGate = document.getElementById('fullscreenGate');
+        const fsWarning = document.getElementById('fullscreenWarningModal');
+        const fsTitle = document.getElementById('fsWarningTitle');
+        const fsMessage = document.getElementById('fsWarningMessage');
+        const fsCounter = document.getElementById('fsViolationCounter');
+        const resumeBtn = document.getElementById('resumeFullscreenBtn');
+        const enterBtn = document.getElementById('enterFullscreenBtn');
+
+        let fullscreenActive = false;
+        let processingViolation = false; // prevent double-fire from simultaneous events
+
+        function enterFullscreen() {
+            var el = document.documentElement;
+            if (el.requestFullscreen) {
+                el.requestFullscreen().catch(function(err) {
+                    console.log('[FULLSCREEN] Failed:', err.message);
+                });
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen();
+            } else if (el.msRequestFullscreen) {
+                el.msRequestFullscreen();
+            }
+        }
+
+        // Initial fullscreen gate button
+        if (enterBtn) {
+            enterBtn.addEventListener('click', function() {
+                enterFullscreen();
+            });
+        }
+
+        // Resume fullscreen after violation
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', function() {
+                enterFullscreen();
+            });
+        }
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', function() {
+            if (document.fullscreenElement) {
+                // Entered fullscreen
+                fullscreenActive = true;
+                window.__fullscreenActivated = true;
+                fsGate.style.display = 'none';
+                fsWarning.style.display = 'none';
+                processingViolation = false;
+            } else {
+                // Exited fullscreen
+                if (!fullscreenActive) return; // ignore if we never entered
+                fullscreenActive = false;
+
+                if (processingViolation) return; // debounce
+                processingViolation = true;
+
+                // Log fullscreen_exit to server
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: 'fullscreen_exit',
+                        timestamp: new Date().toISOString(),
+                        duration_seconds: 0,
+                        details: 'Student exited full-screen mode'
+                    })
+                }).then(function(resp) {
+                    return resp.json();
+                }).then(function(data) {
+                    var action = data.action_triggered;
+                    var remaining = data.violations_remaining;
+
+                    if (action === 'auto_submit') {
+                        // Server has auto-submitted — force the form submit client-side
+                        fsTitle.textContent = 'Test Auto-Submitted';
+                        fsMessage.textContent = 'You exceeded the maximum violation limit. Your test has been automatically submitted.';
+                        fsCounter.textContent = '';
+                        resumeBtn.style.display = 'none';
+                        fsWarning.style.display = 'flex';
+
+                        // Submit the form after a brief delay
+                        setTimeout(function() {
+                            var form = document.getElementById('vivaForm');
+                            if (form) form.submit();
+                        }, 3000);
+
+                    } else if (action === 'lock_review') {
+                        // Session is locked — student cannot continue
+                        fsTitle.textContent = 'Session Locked';
+                        fsMessage.textContent = 'Your test session has been locked due to excessive violations. A faculty member must review and unlock your session before you can continue.';
+                        fsCounter.textContent = '';
+                        resumeBtn.style.display = 'none';
+                        fsWarning.style.display = 'flex';
+
+                    } else {
+                        // Warning — allow re-entry
+                        fsTitle.textContent = 'Full-Screen Violation';
+                        fsMessage.textContent = 'You exited full-screen mode. This violation has been logged for faculty review.';
+                        if (remaining >= 0) {
+                            fsCounter.textContent = 'Violations remaining before action: ' + remaining;
+                        } else {
+                            fsCounter.textContent = '';
+                        }
+                        resumeBtn.style.display = '';
+                        fsWarning.style.display = 'flex';
+                    }
+                }).catch(function() {
+                    // Network error — still show warning
+                    fsTitle.textContent = 'Full-Screen Violation';
+                    fsMessage.textContent = 'You exited full-screen mode. This violation has been logged.';
+                    fsCounter.textContent = '';
+                    resumeBtn.style.display = '';
+                    fsWarning.style.display = 'flex';
+                    processingViolation = false;
+                });
+            }
+        });
     })();
     </script>
 </body>

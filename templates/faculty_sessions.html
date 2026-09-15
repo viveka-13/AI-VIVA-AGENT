@@ -98,6 +98,9 @@
                         </td>
                         <td>
                             <a href="/faculty/session/{{ s.id }}/integrity" class="link-btn">View Report</a>
+                            {% if s.auto_deleted %}
+                            <span class="badge badge-warn" style="margin-left: 6px;" title="Recording files were automatically deleted per retention policy">🗑️ Recording Expired</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

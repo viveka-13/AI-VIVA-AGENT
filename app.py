@@ -137,6 +137,9 @@ def start():
         "time_limit": time_limit
     }, room=slug)
     
+    # Get retention days for consent display
+    retention_days = schedule.get("recording_retention_days", 30) if schedule else 30
+
     session["start_time"] = datetime.now().isoformat()
     session["time_limit"] = time_limit
 
@@ -146,7 +149,8 @@ def start():
         roll=roll,
         experiment=experiment,
         questions=question_payload["questions"],
-        session_id=pending_session_id
+        session_id=pending_session_id,
+        recording_retention_days=retention_days
     )
 
 
@@ -175,6 +179,12 @@ def submit():
 
     if not all([name, roll, experiment]):
         return redirect(url_for("index"))
+
+    pending_id = request.form.get("session_id", None)
+    if pending_id:
+        sess = database.get_session_by_id(int(pending_id))
+        if sess and sess.get("status") == "locked":
+            return "Session locked by faculty. Submission rejected.", 403
 
     responses = []
     for i in range(10):
@@ -391,11 +401,44 @@ def faculty_login():
     return redirect(url_for("faculty_dashboard"))
 
 
+import shutil
+
+def cleanup_expired_recordings():
+    """Check all completed sessions and delete recordings that have expired."""
+    try:
+        conn = database.get_db()
+        sessions = conn.execute("SELECT id, subject_slug, timestamp, auto_deleted FROM viva_sessions WHERE status = 'completed' AND auto_deleted = 0").fetchall()
+        for sess in sessions:
+            sched = database.get_exam_schedule(sess["subject_slug"])
+            if sched:
+                retention_days = sched.get("recording_retention_days", 30)
+                session_time = datetime.fromisoformat(sess["timestamp"])
+                days_elapsed = (datetime.now() - session_time).days
+                if days_elapsed >= retention_days:
+                    # Delete the recording folder
+                    chunk_dir = os.path.join(RECORDINGS_DIR, str(sess["id"]))
+                    if os.path.exists(chunk_dir):
+                        try:
+                            shutil.rmtree(chunk_dir)
+                            print(f"[CLEANUP] Deleted recordings for session {sess['id']}")
+                        except Exception as e:
+                            print(f"[CLEANUP ERROR] Could not delete {chunk_dir}: {e}")
+                    
+                    # Mark as auto-deleted
+                    conn.execute("UPDATE viva_sessions SET auto_deleted = 1 WHERE id = ?", (sess["id"],))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[CLEANUP ERROR] {e}")
+
+
 @app.route("/faculty/dashboard", methods=["GET"])
 def faculty_dashboard():
     """Faculty dashboard: view subjects and upload materials."""
     if not session.get("faculty_logged_in"):
         return redirect(url_for("faculty_home"))
+        
+    cleanup_expired_recordings()
 
     faculty_name = session.get("faculty_name", "")
     registry = load_json(FACULTY_REGISTRY)
@@ -626,6 +669,65 @@ def log_integrity_event(session_id):
         duration_seconds=duration,
         details=details
     )
+    
+    # Process escalating violations
+    action_triggered = None
+    violations_remaining = -1
+    
+    events = integrity_logger.get_events(session_id)
+    violation_events = [e for e in events if e["event_type"] in ("tab_switch", "focus_loss", "fullscreen_exit")]
+    
+    # Deduplicate: if events are within 2 seconds, count as 1 physical action
+    violations_count = 0
+    last_dt = None
+    for e in violation_events:
+        dt = datetime.fromisoformat(e["timestamp"])
+        if last_dt is None or (dt - last_dt).total_seconds() > 2:
+            violations_count += 1
+        last_dt = dt
+
+    session_data = database.get_session_by_id(session_id)
+    if session_data and session_data.get("status") == "pending":
+        sched = database.get_exam_schedule(session_data["subject_slug"])
+        if sched:
+            max_v = sched.get("max_violations", 3)
+            action = sched.get("violation_action", "log_only")
+            violations_remaining = max(0, max_v - violations_count)
+            
+            if violations_count >= max_v and action != "log_only":
+                action_triggered = action
+                if action == "lock_review":
+                    database.lock_session(session_id)
+                elif action == "auto_submit":
+                    # Mark as completed/auto_submitted in DB so they can't continue via backdoor
+                    conn = database.get_db()
+                    conn.execute("UPDATE viva_sessions SET status = 'auto_submitted' WHERE id = ?", (session_id,))
+                    conn.commit()
+                    conn.close()
+
+    return jsonify({
+        "status": "ok",
+        "action_triggered": action_triggered,
+        "violations_remaining": violations_remaining
+    })
+
+
+@app.route("/api/faculty/session/<int:session_id>/unlock", methods=["POST"])
+def unlock_session_route(session_id):
+    if not session.get('faculty_logged_in'):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    database.unlock_session(session_id)
+    return jsonify({"status": "ok"})
+
+
+@app.route("/api/session/<int:session_id>/consent", methods=["POST"])
+def log_student_consent(session_id):
+    """Log the student's consent for screen/webcam recording."""
+    conn = database.get_db()
+    conn.execute("UPDATE viva_sessions SET consent_timestamp = ? WHERE id = ?", (datetime.now().isoformat(), session_id))
+    conn.commit()
+    conn.close()
     return jsonify({"status": "ok"})
 
 
@@ -782,8 +884,11 @@ def faculty_schedule():
         end_time = request.form.get("end_time")
         time_limit = int(request.form.get("time_limit", 20))
         pool_size = int(request.form.get("pool_size", 30))
+        max_violations = int(request.form.get("max_violations", 3))
+        violation_action = request.form.get("violation_action", "log_only")
+        recording_retention_days = int(request.form.get("recording_retention_days", 30))
         
-        database.save_exam_schedule(subject_slug, start_time, end_time, time_limit, pool_size)
+        database.save_exam_schedule(subject_slug, start_time, end_time, time_limit, pool_size, max_violations, violation_action, recording_retention_days)
         return redirect(url_for('faculty_schedule'))
         
     schedules = {}
