@@ -318,7 +318,7 @@
             </p>
             <ul style="color: #ccc; font-size: 13px; line-height: 1.8; text-align: left; margin: 0 auto 18px; max-width: 440px; list-style: none; padding: 0;">
                 <li style="margin-bottom: 6px;">🖥️ <strong>Screen activity</strong> — your entire screen will be recorded.</li>
-                <li style="margin-bottom: 6px;">📸 <strong>Webcam</strong> — your camera feed will be recorded for face detection.</li>
+                <li style="margin-bottom: 6px;">📸🎙️ <strong>Webcam and microphone</strong> — your camera feed and ambient room audio, including other people speaking nearby, will be recorded for faculty review.</li>
                 <li style="margin-bottom: 6px;">📋 <strong>Integrity events</strong> — tab switches, copy/paste attempts, and focus loss are logged.</li>
                 <li style="margin-bottom: 6px;">🔒 <strong>Fullscreen mode</strong> — you must remain in fullscreen during the exam.</li>
                 <li style="margin-bottom: 6px;">🗓️ <strong>Retention</strong> — recordings are retained for <span style="color: #00f2ff; font-weight: 600;">{{ recording_retention_days | default(30) }} days</span> and then automatically deleted.</li>
@@ -334,7 +334,7 @@
                 padding: 14px 36px; background: linear-gradient(to right, #333, #444);
                 color: #666; border: none; border-radius: 25px; font-size: 16px;
                 font-weight: 600; cursor: not-allowed; transition: all 0.3s ease;
-            ">Start Screen & Camera Share</button>
+            ">Start Screen, Camera & Microphone</button>
             <p id="shareError" style="color: #ff6b6b; font-size: 13px; margin-top: 15px; display: none;"></p>
         </div>
     </div>
@@ -415,7 +415,7 @@
         animation: fadeIn 0.3s ease;
     ">
         <span style="display: inline-block; width: 8px; height: 8px; background: #00c850; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite;"></span>
-        Screen + Camera recording active
+        Screen + Camera + Audio recording active
     </div>
     <style>
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -691,7 +691,7 @@ Answer the following questions</h2>
                 if (existingStream) {
                     video.srcObject = existingStream;
                 } else {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 }, audio: true });
                     video.srcObject = stream;
                 }
 
@@ -999,12 +999,17 @@ Answer the following questions</h2>
                 if (!isRecording) return;
                 var screenOk = screenStream && screenStream.getVideoTracks().some(function(t) { return t.readyState === 'live'; });
                 var camOk = webcamStream && webcamStream.getVideoTracks().some(function(t) { return t.readyState === 'live'; });
-                if (screenOk && camOk) {
-                    badge.textContent = '\uD83D\uDD34 Screen + Camera recording active';
+                var audioOk = webcamStream && webcamStream.getAudioTracks().some(function(t) { return t.readyState === 'live'; });
+                if (screenOk && camOk && audioOk) {
+                    badge.textContent = '\uD83D\uDD34 Recording: Screen + Camera + Audio';
                 } else if (screenOk) {
-                    badge.textContent = '\uD83D\uDD34 Recording: Screen only (camera lost)';
+                    badge.textContent = audioOk
+                        ? '\uD83D\uDD34 Recording: Screen only (camera lost)'
+                        : '\uD83D\uDD34 Recording: Screen only (camera/audio unavailable)';
+                } else if (camOk && audioOk) {
+                    badge.textContent = '\uD83D\uDD34 Recording: Camera + Audio (screen lost)';
                 } else if (camOk) {
-                    badge.textContent = '\uD83D\uDD34 Recording: Camera only (screen lost)';
+                    badge.textContent = '\uD83D\uDD34 Recording: Camera only (audio unavailable)';
                 } else {
                     badge.textContent = '\u26A0\uFE0F Recording stopped';
                 }
@@ -1099,6 +1104,7 @@ Answer the following questions</h2>
         }
 
         window.requestScreenShare = async function() {
+            let sStream = null;
             try {
                 // Log consent to the server (first time only)
                 if (gate.style.display !== 'none') {
@@ -1106,8 +1112,8 @@ Answer the following questions</h2>
                 }
 
                 // Request both display and user media
-                const sStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-                const wStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                sStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const wStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
                 // Pass webcam stream to face detection (avoids double-prompt)
                 if (window.__initWebcamWithStream) {
@@ -1150,8 +1156,11 @@ Answer the following questions</h2>
                 }
 
             } catch (err) {
+                if (sStream) {
+                    sStream.getTracks().forEach(function(track) { track.stop(); });
+                }
                 shareError.style.display = 'block';
-                shareError.textContent = 'Permission denied. Both screen share and camera access are required to begin.';
+                shareError.textContent = 'Permission denied. Screen, camera, and microphone access are required to begin.';
                 console.log('[RECORDING] setup error:', err.message);
             }
         };
