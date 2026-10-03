@@ -95,6 +95,15 @@ def init_db():
             question        TEXT NOT NULL,
             FOREIGN KEY (session_id) REFERENCES viva_sessions(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS certificate_records (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            certificate_id  TEXT NOT NULL UNIQUE,
+            session_id      INTEGER NOT NULL UNIQUE,
+            generated_at    TEXT NOT NULL,
+            file_path       TEXT NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES viva_sessions(id) ON DELETE CASCADE
+        );
     """)
 
 
@@ -275,6 +284,55 @@ def save_viva_session(student_name, roll_no, subject, subject_slug,
     conn.commit()
     conn.close()
     return session_id
+
+
+def get_certificate_for_session(session_id):
+    """Return certificate metadata only when its session is completed and passed."""
+    conn = get_db()
+    row = conn.execute("""
+        SELECT c.certificate_id, c.session_id, c.generated_at, c.file_path,
+               vs.student_name, vs.subject, vs.timestamp, vs.total_score,
+               vs.max_marks, vs.grade
+        FROM certificate_records c
+        JOIN viva_sessions vs ON vs.id = c.session_id
+        WHERE c.session_id = ? AND vs.status = 'completed' AND vs.passed = 1
+    """, (session_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_certificate_by_id(certificate_id):
+    """Look up a genuine certificate, exposing only its public verification fields."""
+    conn = get_db()
+    row = conn.execute("""
+        SELECT c.certificate_id, c.session_id, c.generated_at, c.file_path,
+               vs.student_name, vs.subject, vs.timestamp, vs.total_score,
+               vs.max_marks, vs.grade
+        FROM certificate_records c
+        JOIN viva_sessions vs ON vs.id = c.session_id
+        WHERE c.certificate_id = ? AND vs.status = 'completed' AND vs.passed = 1
+    """, (certificate_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def create_certificate_record(session_id, certificate_id, file_path, generated_at):
+    """Register a certificate only for a completed passing session; idempotent per session."""
+    conn = get_db()
+    conn.execute("""
+        INSERT OR IGNORE INTO certificate_records
+            (certificate_id, session_id, generated_at, file_path)
+        SELECT ?, id, ?, ? FROM viva_sessions
+        WHERE id = ? AND status = 'completed' AND passed = 1
+    """, (certificate_id, generated_at, file_path, session_id))
+    row = conn.execute(
+        "SELECT certificate_id, session_id, generated_at, file_path "
+        "FROM certificate_records WHERE session_id = ?",
+        (session_id,),
+    ).fetchone()
+    conn.commit()
+    conn.close()
+    return dict(row) if row else None
 
 
 def save_similarity_flag(session_id, answer_id, question_number, flag_type,

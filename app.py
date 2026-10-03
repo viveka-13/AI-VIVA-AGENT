@@ -9,6 +9,7 @@ import feedback_generator
 from flask import send_file
 import gradebook_exporter
 import integrity_logger
+import certificate_generator
 import io
 import subprocess
 import multiprocessing
@@ -17,6 +18,7 @@ import sys
 import json
 import hashlib
 import re
+from html import escape
 
 # Faculty data paths
 FACULTY_DATA_DIR = os.path.join(os.path.dirname(__file__), "faculty_data")
@@ -287,6 +289,12 @@ def submit():
             name, roll, experiment, slugify(experiment),
             answers_data, total_score, max_marks, feedback_summary
         )
+
+    certificate = None
+    try:
+        certificate = certificate_generator.ensure_certificate(session_id)
+    except Exception as e:
+        print(f"[CERTIFICATE] Generation failed for session {session_id}: {e}")
     
     # Run similarity check (non-blocking — if model not installed, just skips)
     try:
@@ -297,6 +305,7 @@ def submit():
 
     report = generate_report(name, roll, experiment, responses)
     report["session_id"] = session_id
+    report["certificate_id"] = certificate["certificate_id"] if certificate else None
     
     # Fetch full session data (answers + concepts + feedback)
     full_session = database.get_session_by_id(session_id)
@@ -649,6 +658,38 @@ def download_pdf_report(session_id):
     )
 
 
+@app.route("/certificate/<certificate_id>/download", methods=["GET"])
+def download_certificate(certificate_id):
+    certificate = database.get_certificate_by_id(certificate_id)
+    if not certificate or not os.path.isfile(certificate["file_path"]):
+        return "Certificate not found", 404
+
+    return send_file(
+        certificate["file_path"],
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"AI_Viva_Certificate_{certificate_id}.pdf",
+    )
+
+
+@app.route("/certificate/verify/<certificate_id>", methods=["GET"])
+def verify_certificate(certificate_id):
+    certificate = database.get_certificate_by_id(certificate_id)
+    if not certificate or not os.path.isfile(certificate["file_path"]):
+        return "<!doctype html><title>Certificate not found</title><h1>Certificate not found or invalid</h1>", 404
+
+    return (
+        "<!doctype html><html lang='en'><meta charset='utf-8'>"
+        "<title>Certificate verified</title><body>"
+        "<h1>Certificate verified</h1>"
+        f"<p>Student: {escape(certificate['student_name'])}</p>"
+        f"<p>Subject: {escape(certificate['subject'])}</p>"
+        f"<p>Date completed: {escape(certificate['timestamp'][:10])}</p>"
+        f"<p>Certificate ID: {escape(certificate['certificate_id'])}</p>"
+        "</body></html>"
+    )
+
+
 # ==========================================
 # ACADEMIC INTEGRITY
 # ==========================================
@@ -850,6 +891,12 @@ def faculty_sessions_list(subject_slug):
         events = database.get_integrity_events(s["id"])
         s["flag_count"] = len(flags)
         s["event_count"] = len(events)
+        certificate = database.get_certificate_for_session(s["id"])
+        s["certificate_id"] = (
+            certificate["certificate_id"]
+            if certificate and os.path.isfile(certificate["file_path"])
+            else None
+        )
     
     # Get subject name
     all_subjects = load_json(SUBJECTS_FILE)

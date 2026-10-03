@@ -200,7 +200,12 @@
 </head>
 <body>
     <div class="report-box">
-        <div style="text-align: right; margin-bottom: 20px;"><a href="/download_report/{{ report.session_id }}" style="padding: 10px 20px; background: #00f2ff; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold; font-family: 'Orbitron', sans-serif;">📥 Download PDF Report</a></div>
+        <div style="text-align: right; margin-bottom: 20px;">
+            <a href="/download_report/{{ report.session_id }}" style="padding: 10px 20px; background: #00f2ff; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold; font-family: 'Orbitron', sans-serif;">📥 Download PDF Report</a>
+            {% if report.details and report.details.session.passed and report.certificate_id %}
+            <a href="/certificate/{{ report.certificate_id }}/download" style="display: inline-block; margin-top: 8px; padding: 10px 20px; background: linear-gradient(to right, #0077ff, #00f2ff); color: #000; text-decoration: none; border-radius: 5px; font-weight: bold; font-family: 'Orbitron', sans-serif;">🏅 Download Certificate</a>
+            {% endif %}
+        </div>
         <h2>✨ Viva Report</h2>
         <p><strong>Name:</strong> <span>{{ report.name }}</span></p>
         <p><strong>Roll No:</strong> <span>{{ report.roll }}</span></p>
